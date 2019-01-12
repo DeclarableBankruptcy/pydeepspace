@@ -14,7 +14,7 @@ class LeftStartAuto(AutonomousStateMachine):
 
     ship_deposit = ()  # TODO
 
-    @state
+    @state(first=True)
     def drive_to_ship(self):
         self.motion.set_trajectory([self.current_waypoint, self.ship_deposit],
                                    end_heading=0, end_speed=0.4)
