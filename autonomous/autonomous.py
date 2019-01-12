@@ -12,21 +12,21 @@ class LeftStartAuto(AutonomousStateMachine):
     chassis: Chassis
     motion: ChassisMotion
 
-    ship_deposit = ()  # TODO
+    #ship_deposit = (5.5, 0.2) 
 
     @state(first=True)
-    def drive_to_ship(self):
-        self.motion.set_trajectory([self.current_waypoint, self.ship_deposit],
-                                   end_heading=0, end_speed=0.4)
-        if not self.motion.trajectory_executing:
+    def drive_to_ship(self, initial_call):
+        if initial_call:	
+        	self.chassis.set_inputs(3, 0, 0)
+        if not self.chassis.set_inputs:
             self.next_state_now("deposit_hatch")
 
     @state
-    def intake_hatch(self):
-        pass
+    def deposit_hatch(self):
+        pass	   
 
     @state
-    def deposit_hatch(self):
+    def intake_hatch(self):
         pass
 
     @state
@@ -35,5 +35,5 @@ class LeftStartAuto(AutonomousStateMachine):
         self.done()
 
     @property
-    def current_waypoint(self):
+    def current_odometry(self):
         return (self.chassis.odometry_x, self.chassis.odometry_y)
