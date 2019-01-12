@@ -8,8 +8,14 @@ from utilities.imu import IMU
 
 
 class AlignmentStateMachine(StateMachine):
-    """A state machine designed to help the robot align using the vision
-    system"""
+    """
+    A state machine for alignment using vision systems.
+
+    The robot will use two methods of alignment, targets above
+    objectives from longer range and fine adjustment using the ground
+    tape once we are able to see it.
+    """
+
     vision: Vision
     chassis: Chassis
     imu: IMU
@@ -20,36 +26,59 @@ class AlignmentStateMachine(StateMachine):
 
     @state(first=True)
     def check_ground(self):
-        """check if we can see vision tape on the ground before """
-        if self.vision.ground_tape_angle == []:  # TODO vision sees ground tape
+        """Check for vision tape on the ground"""
+        if self.vision.ground_tape_angle == []:
             self.next_state_now("ground_align")
         else:
             self.next_state_now("target_tape_align")
 
     @state
     def ground_tape_align(self):
-        """Attempt to align with the objective by way of the vision tape on the ground,
-        correct errors untill they aare within tolerance"""
+        """
+        Align with the objective by way of the ground vision tape.
+
+        The robot will attempt to correct errors untill they are within
+        tolerance, commands a constant forwards velocity with lateral
+        corrections based off the difference between the vision angle and
+        angle measured by the IMU.
+        NOTE: the set_inputs command could exceed the limitations of the
+        hardware, this is handled by the drivebase control system
+        """
         heading = self.imu.getAngle()
-        if ((abs(self.vision.ground_tape_angle) > self.angle_tolerance)
-           or (abs(self.vision.ground_tape_distance) > self.range_tolerance)):
-            self.chassis.set_inputs(self.vision.ground_tape_distance *
-                                    math.cos(self.vision.ground_tape_angle),
-                                    self.vision.ground_tape_distance *
-                                    math.sin(self.vision.ground_tape_angle),
-                                    heading + self.vision.ground_tape_angle)
+        if (abs(self.vision.ground_tape_angle) > self.angle_tolerance) or (
+            abs(self.vision.ground_tape_distance) > self.range_tolerance
+        ):
+            self.chassis.set_inputs(
+                self.vision.ground_tape_distance
+                * math.cos(self.vision.ground_tape_angle),
+                self.vision.ground_tape_distance
+                * math.sin(self.vision.ground_tape_angle),
+                heading + self.vision.ground_tape_angle,
+            )
         else:
             self.done()
 
     @state
     def target_tape_align(self):
+        """
+        Align with the objective using the vision tape above the objective.
+
+        The robot will try to correct errors untill they are within tolerance
+        by moving and rotating towards the measured vision angle, once
+        successful move on to the ground alignment system.
+        NOTE: the set_inputs command could exceed the limitations of the
+        hardware, this is handled by the drivebase control system
+        """
         heading = self.imu.getAngle()
-        if ((abs(self.vision.target_tape_angle) > self.angle_tolerance)
-           or (abs(self.vision.target_tape_distance) > self.range_tolerance)):
-            self.chassis.set_inputs(self.vision.target_tape_distance *
-                                    math.cos(self.vision.target_tape_angle),
-                                    self.vision.target_tape_distance *
-                                    math.sin(self.vision.target_tape_angle),
-                                    heading + self.vision.ground_tape_angle)
+        if (abs(self.vision.target_tape_angle) > self.angle_tolerance) or (
+            abs(self.vision.target_tape_distance) > self.range_tolerance
+        ):
+            self.chassis.set_inputs(
+                self.vision.target_tape_distance
+                * math.cos(self.vision.target_tape_angle),
+                self.vision.target_tape_distance
+                * math.sin(self.vision.target_tape_angle),
+                heading + self.vision.ground_tape_angle,
+            )
         else:
             self.next_state_now("ground_tape_align")
