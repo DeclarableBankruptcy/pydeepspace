@@ -18,8 +18,15 @@ class LeftStartAuto(AutonomousStateMachine):
     def drive_to_ship(self, initial_call):
         if initial_call:	
         	self.chassis.set_inputs(3, 0, 0)
+        	if self.chassis.odometry_y > 3:
+        		self.chassis.set_inputs(0, 0, 0)
+        		self.next_state_now("deposit_hatch")
         if not self.chassis.set_inputs:
             self.next_state_now("deposit_hatch")
+
+            #TODO and fix later 
+
+            
 
     @state
     def deposit_hatch(self):
