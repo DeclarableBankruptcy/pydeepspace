@@ -17,10 +17,10 @@ class LeftStartAuto(AutonomousStateMachine):
     #ship_deposit = (5.5, 0.2) 
 
     @state(first=True)
-    def drive_to_cargoship(self, initial_call):
+    def drive_to_front_of_cargoship(self, initial_call):
         if initial_call:	
         	self.chassis.set_inputs(3, 0, 0)
-        	if self.chassis.odometry_x > 3:
+        	if self.chassis.odometry_x > 2.9:
         		self.chassis.set_inputs(0, 0, 0)
         		self.next_state_now("align_for_deployment")
 
@@ -30,10 +30,10 @@ def drive_to_loading_bay(self):
 	#first pass
 	if x == 1:
 		self.chassis.set_inputs(0, -2, math.pi)
-		if self.chassis.odometry_y< -2:
+		if self.chassis.odometry_y < -2:
 			self.chassis.set_inputs(0,0,math.pi)
 			if: #is facing towards the loading bay
-				self.chassis.set_inputs(-4,-0.5,0)
+				self.chassis.set_inputs(-4,-0.4,0)
 				if self.chassis.odometry_x < -5.6:
 					self.chassis.set_inputs(0,0,0)
 					x+=1
@@ -41,7 +41,7 @@ def drive_to_loading_bay(self):
 		elif #is facing towards the loading bay
 			self.chassis.set_inputs(0,-2,0)
 			if self.chassis.odometry_y < -2:
-				self.set_inputs(-4,-0.5,0)
+				self.set_inputs(-4,-0.4,0)
 				if self.chassis.odometry_x < -5.6:
 					self.chassis.set_inputs(0,0,0)
 					x+=1
