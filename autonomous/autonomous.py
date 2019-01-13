@@ -1,4 +1,6 @@
 import wpilib
+import math
+import time
 from magicbot.state_machine import AutonomousStateMachine, state
 
 from automations.motion import ChassisMotion
@@ -15,25 +17,70 @@ class LeftStartAuto(AutonomousStateMachine):
     #ship_deposit = (5.5, 0.2) 
 
     @state(first=True)
-    def drive_to_ship(self, initial_call):
+    def drive_to_cargoship(self, initial_call):
         if initial_call:	
         	self.chassis.set_inputs(3, 0, 0)
         	if self.chassis.odometry_y > 3:
         		self.chassis.set_inputs(0, 0, 0)
-        		self.next_state_now("deposit_hatch")
-        if not self.chassis.set_inputs:
-            self.next_state_now("deposit_hatch")
+        		self.next_state_now("align_for_deployment")
+    pass
+		
+	@state
+	x = 1 
+	def drive_to_loading_bay(self):
+		if x = 1:
+			self.chassis.set_inputs(0, -2, math.pi)
+			if self.chassis.odometry_x < -2:
+				self.chassis.set_inputs(0,0,math.pi)
+				if #is facing towards the loading bay
+					self.chassis.set_inputs(-4,-0.5,0)
+					if self.chassis.odometry_x < -5.6:
+						self.chassis.set_inputs(0,0,0)
+						self.next_state_now("align_for_intake")
+			elif #is facing towards the loading bay
+				self.chassis.set_inputs(0,-2,0)
+				if self.chassis.odometry_x < -2:
+					self.set_inputs(-4,-0.5,0)
+					if self.chassis.odometry_x < -5.6:
+						self.chassis.set_inputs(0,0,0)
+						self.next_state_now("align_for_intake")
+		else:
+			#getting back from side bays 
+		#if near loading bay
+			#self.next_state_now("align_for_intake")
+	pass
 
-            #TODO and fix later 
+	@state
+	def drive_to_side_cargo_bay(self):
+		#move towards side cargo bay without a hatch
+		#if near side cargo bay without hatch
+			#self.next_state_now("align_for_deployment")
+		pass
 
-            
+	@state
+	def align_for_deployment(self):
+		#
+		#if aligned
+			#self.next_state_now("deposit_hatch")
+		pass
+
+	@state
+	def align_for_intake(self):
+		#if aligned
+			#self.next_state_now("intake hatch")
+		pass
 
     @state
     def deposit_hatch(self):
-        pass	   
+    	#if hatch deposited 
+    		#self.next_state_now("drive_to_loading_bay")
+        pass
+
 
     @state
     def intake_hatch(self):
+    	#if hatch in robot
+    		#self.next_state_now("drive_to_side_cargo_bay")
         pass
 
     @state
