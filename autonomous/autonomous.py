@@ -118,6 +118,7 @@ class LeftStartAuto(AutonomousStateMachine):
 	def deposit_hatch(self):
 		#if hatch deposited 
 			#self.next_state_now("drive_to_loading_bay")
+		pass
 
 	@state
 	def drive_to_loading_bay(self):
@@ -148,7 +149,7 @@ class LeftStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < -2.4:
 				self.chass.set_inputs(self.loading_bay_x_2,0,self.loading_bay_spin_2)
 				self.loading_bay_y_2 = 0
-			if self.loading_bay_x_2 == 0 and self.loading_bay_y_2 == 0 and loading_bay_spin_2 == 0
+			if self.loading_bay_x_2 == 0 and self.loading_bay_y_2 == 0 and loading_bay_spin_2 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 
@@ -164,7 +165,7 @@ class LeftStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < -2.4:
 				self.chass.set_inputs(self.loading_bay_x_3,0,self.loading_bay_spin_3)
 				self.loading_bay_y_3 = 0
-			if self.loading_bay_x_3 == 0 and self.loading_bay_y_3 == 0 and self.loading_bay_spin_3 == 0
+			if self.loading_bay_x_3 == 0 and self.loading_bay_y_3 == 0 and self.loading_bay_spin_3 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 
@@ -180,7 +181,7 @@ class LeftStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < -2.4:
 				self.chass.set_inputs(self.loading_bay_x_4,0,spin)
 				self.loading_bay_y_4 = 0
-			if self.loading_bay_x_4 == 0 and self.loading_bay_y_4 == 0 and self.loading_bay_spin_4 == 0
+			if self.loading_bay_x_4 == 0 and self.loading_bay_y_4 == 0 and self.loading_bay_spin_4 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 		
@@ -219,7 +220,7 @@ class LeftStartAuto(AutonomousStateMachine):
 
 
 
-class RightqStartAuto(AutonomousStateMachine):
+class RightStartAuto(AutonomousStateMachine):
 	MODE_NAME = "LEFT_START_AUTO"
 	chassis: Chassis
 	motion: ChassisMotion
@@ -327,6 +328,7 @@ class RightqStartAuto(AutonomousStateMachine):
 	def deposit_hatch(self):
 		#if hatch deposited 
 			#self.next_state_now("drive_to_loading_bay")
+		pass
 
 	@state
 	def drive_to_loading_bay(self):
@@ -357,7 +359,7 @@ class RightqStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < 2.4:
 				self.chass.set_inputs(self.loading_bay_x_2,0,self.loading_bay_spin_2)
 				self.loading_bay_y_2 = 0
-			if self.loading_bay_x_2 == 0 and self.loading_bay_y_2 == 0 and loading_bay_spin_2 == 0
+			if self.loading_bay_x_2 == 0 and self.loading_bay_y_2 == 0 and loading_bay_spin_2 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 
@@ -373,7 +375,7 @@ class RightqStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < 2.4:
 				self.chass.set_inputs(self.loading_bay_x_3,0,self.loading_bay_spin_3)
 				self.loading_bay_y_3 = 0
-			if self.loading_bay_x_3 == 0 and self.loading_bay_y_3 == 0 and self.loading_bay_spin_3 == 0
+			if self.loading_bay_x_3 == 0 and self.loading_bay_y_3 == 0 and self.loading_bay_spin_3 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 
@@ -389,7 +391,7 @@ class RightqStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < 2.4:
 				self.chass.set_inputs(self.loading_bay_x_4,0,spin)
 				self.loading_bay_y_4 = 0
-			if self.loading_bay_x_4 == 0 and self.loading_bay_y_4 == 0 and self.loading_bay_spin_4 == 0
+			if self.loading_bay_x_4 == 0 and self.loading_bay_y_4 == 0 and self.loading_bay_spin_4 == 0:
 				self.loading_bay_stage+=1
 				self.next_state_now("align_for_intake")
 		
