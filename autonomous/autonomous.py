@@ -131,12 +131,12 @@ class LeftStartAuto(AutonomousStateMachine):
 			if self.chassis.odometry_y < -2:
 				self.chassis.set_inputs(self.loading_bay_x_1,0,self.loading_bay_spin_1)
 				self.loading_bay_y_1 = 0
-			if self.loading_bay_y_1 == 0 and self.loading_bay_spin_1 == 0:
+			if self.loading_bay_y_1 == 0 and self.loading_bay_spin_1 == 0 and self.loading_bay_spin_1 == 0:
 				self.chassis.set_inputs(-4,-0.6,0)
-				if self.chassis.odometry_x < 5.6:
-					self.chassis.set_inputs(0,0,0)
-					self.loading_bay_stage +=1
-					self.next_state_now("align_for_intake")
+			if self.chassis.odometry_x < 5.6:
+				self.chassis.set_inputs(0,0,0)
+				self.loading_bay_stage +=1
+				self.next_state_now("align_for_intake")
 		#sencond pickup
 		elif self.loading_bay_stage == 2:
 			self.chassis.set_inputs(self.loading_bay_x_2,self.loading_bay_y_2,self.loading_bay_spin_2)
