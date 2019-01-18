@@ -35,10 +35,14 @@ class SwerveChassis:
     def setup(self):
         # Heading PID controller
         self.heading_pid_out = ChassisPIDOutput()
-        self.heading_pid = PIDController(Kp=3.0, Ki=0.0, Kd=5.0,
-                                         source=self.imu.getAngle,
-                                         output=self.heading_pid_out,
-                                         period=1/50)
+        self.heading_pid = PIDController(
+            Kp=3.0,
+            Ki=0.0,
+            Kd=5.0,
+            source=self.imu.getAngle,
+            output=self.heading_pid_out,
+            period=1 / 50,
+        )
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-2, 2)
         self.heading_pid.setContinuous()
@@ -52,16 +56,19 @@ class SwerveChassis:
         self.odometry_y_vel = 0
         self.odometry_z_vel = 0
 
-        self.A = np.array([
-            [1, 0, 1],
-            [0, 1, 1],
-            [1, 0, 1],
-            [0, 1, 1],
-            [1, 0, 1],
-            [0, 1, 1],
-            [1, 0, 1],
-            [0, 1, 1]
-        ], dtype=float)
+        self.A = np.array(
+            [
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 0, 1],
+                [0, 1, 1],
+            ],
+            dtype=float,
+        )
 
         # figure out the contribution of the robot's overall rotation about the
         # z axis to each module's movement, and encode that information in a
@@ -76,8 +83,8 @@ class SwerveChassis:
             # ls.append(module_angle)
             # self.z_axis_adjustment[i*2, 0] = -module_dist*math.sin(module_angle)
             # self.z_axis_adjustment[i*2+1, 0] = module_dist*math.cos(module_angle)
-            self.A[i*2, 2] = -module_dist*math.sin(module_angle)
-            self.A[i*2+1, 2] = module_dist*math.cos(module_angle)
+            self.A[i * 2, 2] = -module_dist * math.sin(module_angle)
+            self.A[i * 2 + 1, 2] = module_dist * math.cos(module_angle)
 
             module.reset_encoder_delta()
             module.read_steer_pos()
@@ -141,13 +148,13 @@ class SwerveChassis:
         for module in self.modules:
             # Calculate the additional vx and vy components for this module
             # required to achieve our desired angular velocity
-            vz_x = -module.dist*vz*math.sin(module.angle)
-            vz_y = module.dist*vz*math.cos(module.angle)
+            vz_x = -module.dist * vz * math.sin(module.angle)
+            vz_y = module.dist * vz * math.cos(module.angle)
             if self.field_oriented:
                 vx, vy = self.robot_orient(self.vx, self.vy, angle)
             else:
                 vx, vy = self.vx, self.vy
-            module.set_velocity(vx+vz_x, vy+vz_y)
+            module.set_velocity(vx + vz_x, vy + vz_y)
 
     def update_odometry(self, o, sensor_timestamp):
         # TODO: re-enable if we end up not using callback method
@@ -164,10 +171,10 @@ class SwerveChassis:
             module.update_odometry()
             odometry_x, odometry_y = module.get_cartesian_delta()
             velocity_x, velocity_y = module.get_cartesian_vel()
-            odometry_outputs[i*2, 0] = odometry_x
-            odometry_outputs[i*2+1, 0] = odometry_y
-            velocity_outputs[i*2, 0] = velocity_x
-            velocity_outputs[i*2+1, 0] = velocity_y
+            odometry_outputs[i * 2, 0] = odometry_x
+            odometry_outputs[i * 2 + 1, 0] = odometry_y
+            velocity_outputs[i * 2, 0] = velocity_x
+            velocity_outputs[i * 2 + 1, 0] = velocity_y
             module.reset_encoder_delta()
             # betas.append(module.measured_azimuth)
             # phi_dots.append(module.wheel_angular_vel)
@@ -177,7 +184,9 @@ class SwerveChassis:
         # print(lambda_e)
 
         vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
-        delta_x, delta_y, delta_z = self.robot_movement_from_odometry(odometry_outputs, heading, z_vel=vz)
+        delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
+            odometry_outputs, heading, z_vel=vz
+        )
 
         self.odometry_x += delta_x
         self.odometry_y += delta_y
@@ -190,11 +199,10 @@ class SwerveChassis:
         self.odometry_updated = True
 
     def robot_movement_from_odometry(self, odometry_outputs, angle, z_vel=0):
-        lstsq_ret = np.linalg.lstsq(self.A, odometry_outputs,
-                                    rcond=None)
+        lstsq_ret = np.linalg.lstsq(self.A, odometry_outputs, rcond=None)
         x, y, theta = lstsq_ret[0].reshape(3)
         # TODO: re-enable if we move back to running in the same thread
-        x_field, y_field = self.field_orient(x, y, angle + z_vel*(1/200))
+        x_field, y_field = self.field_orient(x, y, angle + z_vel * (1 / 200))
         # x_field, y_field = self.field_orient(x, y, angle)
         return x_field, y_field, theta
 
@@ -211,7 +219,9 @@ class SwerveChassis:
         self.vz = None
         self.set_heading_sp(heading)
 
-    def set_inputs(self, vx: float, vy: float, vz: float, *, field_oriented: bool = True):
+    def set_inputs(
+        self, vx: float, vy: float, vz: float, *, field_oriented: bool = True
+    ):
         """Set chassis vx, vy, and vz components of inputs.
         Args:
             vx: (forward) component of the robot's desired velocity. In m/s.

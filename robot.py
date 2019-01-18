@@ -24,8 +24,8 @@ class Robot(magicbot.MagicRobot):
             "a",
             steer_talon=ctre.TalonSRX(42),
             drive_talon=ctre.TalonSRX(48),
-            x_pos=-(0.375-0.160),
-            y_pos=0.375-0.100,
+            x_pos=-(0.375 - 0.160),
+            y_pos=0.375 - 0.100,
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -33,8 +33,8 @@ class Robot(magicbot.MagicRobot):
             "b",
             steer_talon=ctre.TalonSRX(58),
             drive_talon=ctre.TalonSRX(2),
-            x_pos=0.375-0.160,
-            y_pos=-(0.375-0.100),
+            x_pos=0.375 - 0.160,
+            y_pos=-(0.375 - 0.100),
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
