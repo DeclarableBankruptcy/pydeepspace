@@ -22,7 +22,7 @@ class Vision:
         self.target_tape_error_value = value
 
     def get_target_tape_error(self):
-        if self.target_tape_error_value < -1 or self.target_tape_error_value > 1:
+        if not -1 <= self.target_tape_error_value <= 1:
             return None
         elif hal.isSimulation():
             return 0
