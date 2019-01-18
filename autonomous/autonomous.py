@@ -1,6 +1,5 @@
 import wpilib
 import math
-import time
 from magicbot.state_machine import AutonomousStateMachine, state
 
 from automations.motion import ChassisMotion
@@ -18,28 +17,18 @@ class LeftStartAuto(AutonomousStateMachine):
 	
 	def __init__(self):
 		self.loading_bay_stage = 1
-		self.loading_bay_x_1 = 0
-		self.loading_bay_y_1 = -2
+		self.loading_bay_cords = ()
 		self.loading_bay_spin_1 = math.pi 
-		self.loading_bay_x_2 = -3.25
-		self.loading_bay_y_2 = -1.2
 		self.loading_bay_spin_2 = (math.pi/2)*-1
-		self.loading_bay_x_3 = -3.5
-		self.loading_bay_y_3 = -1.2
 		self.loading_bay_spin_3 = (math.pi/2)*-1
-		self.loading_bay_x_4 = -3.75
-		self.loading_bay_y_4 = -1.2
 		self.loading_bay_spin_4 = (math.pi/2)*-1
 
 		self.side_cargoship_stage = 1
-		self.side_cargoship_x_1 = 3.25
-		self.side_cargoship_y_1 = 1.2
+		self.side_cargoship_cords_1 = ()
 		self.side_cargoship_spin_1 = math.pi/2
-		self.side_cargoship_x_2 = 3.5
-		self.side_cargoship_y_2 = 1.2
+		self.side_cargoship_cords_2 = ()
 		self.side_cargoship_spin_2 = math.pi/2
-		self.side_cargoship_x_3 = 3.75
-		self.side_cargoship_y_3 = 1.2
+		self.side_cargoship_cords_3 = ()
 		self.side_cargoship_spin_3 = math.pi/2
 
 
@@ -47,7 +36,7 @@ class LeftStartAuto(AutonomousStateMachine):
 	@state(first=True)
 	def drive_to_front_of_cargoship(self, initial_call):
 		if initial_call:	
-			self.chassis.set_inputs(3, 0, 0)
+			#drive to Front loading bay
 			if self.chassis.odometry_x > 2.9:
 				self.chassis.set_inputs(0, 0, 0)
 				self.next_state_now("align_for_deployment")
