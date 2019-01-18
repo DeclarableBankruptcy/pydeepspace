@@ -4,9 +4,7 @@ from networktables import NetworkTables
 
 
 class Vision:
-
     def __init__(self):
-        """This is called after variables are injected by magicbot."""
         self.nt = NetworkTables.getTable("/vision")
         self.target_tape_error = self.nt.getEntry("target_tape_error")
         self.target_tape_error.addListener(
