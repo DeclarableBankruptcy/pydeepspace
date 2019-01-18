@@ -2,12 +2,13 @@
 
 import magicbot
 import wpilib
+from components.vision import Vision
 
 
 class Robot(magicbot.MagicRobot):
     def createObjects(self):
         """Create motors and stuff here."""
-        pass
+        self.vision = Vision()
 
     def teleopInit(self):
         """Initialise driver control."""
