@@ -19,20 +19,20 @@ class LeftStartAuto(AutonomousStateMachine):
     hatchcontroller: HatchController
 
     def __init__(self):
-        self.point1 = (5.8,0.2, )    # \                                       drive to left front cargo bay                                  
-        self.point2 = (4.8,2.2, )    # |-- turn 180 degres somwhere in here    1st prep for left loadin bay
-        self.point3 = (0.2,3.38, )   # /                                       drive to loading bay   
-        self.point4 = (6.6,0.8, )   #} turn 90 degres here                     drive to left side cargo bay 
-        self.point5 = (4.7,0.8, )    # \                                       1st prep for right loading bay
-        self.point6 = (3,-1.94, )    # |-- turn back 90 degres somhere here    2nd prep for right loading bay
-        self.point7 = (0.2,-3.38, ) #  /                                       drive to right loading bay
-        self.point8_side = (6.6,-0.8, )  #} turn back another 90 degres here   driving to right side cargo bay to deploy hatch
+        self.point1 = (5.8,0.2,0)    #                                        drive to left front cargo bay                                  
+        self.point2 = (4.8,2.2,0)    # \--turn 180 degres somwhere in here    1st prep for left loadin bay
+        self.point3 = (0.2,3.38,math.pi)   # /                                       drive to loading bay   
+        self.point4 = (6.6,0.8,math.pi*1.5)   #} turn 90 degres here                     drive to left side cargo bay 
+        self.point5 = (4.7,0.8,math.pi*1.5)    # \                                       1st prep for right loading bay
+        self.point6 = (3,-1.94,math.pi)    #     |-- turn back 90 degres somhere here    2nd prep for right loading bay
+        self.point7 = (0.2,-3.38,math.pi ) #     /                                       drive to right loading bay
+        self.point8_side = (6.6,-0.8,math.pi*0.5 )  #} turn back another 90 degres here   driving to right side cargo bay to deploy hatch
         #or 
-        self.point8_front_prep = (4.8,-2.2, )#                                 1st prep for right front cargo bay                                                              
-        self.point9_front = (5.8,-0.2, )  #} turn 180                          drive to right front cargo bay
+        self.point8_front_prep = (4.8,-2.2,math.pi )#                                 1st prep for right front cargo bay                                                              
+        self.point9_front = (5.8,-0.2,0)  #} turn 180                          drive to right front cargo bay
 
-        self.loading_bay_pos = ((), (), ())
-        self.cargoship_pos = ((), (), ())
+        #self.loading_bay_pos = ((), (), ())
+        #self.cargoship_pos = ((), (), ())
         self.start_pos = ( , , )
         self.completed_runs = 0
         # TODO find the correct co-ordinates
