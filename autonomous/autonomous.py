@@ -19,33 +19,63 @@ class LeftStartAuto(AutonomousStateMachine):
     hatchcontroller: HatchController
 
     def __init__(self):
-        self.point1 = ((5.8),(0.2),())    # \
-        self.point2 = ((4.8),(2.2),())    # |-- turn 180 degres somwhere in here 
-        self.point3 = ((0.2),(3.38),())   # /
-        self.point4 = ((6.6),(0.8),())   #} turn 90 degres here    
-        self.point5 = ((4.7),(0.8),())    # \
-        self.point6 = ((3),(-1.94),())    # |-- turn back 90 degres somhere here
-        self.point7 = ((0.2),(-3.38),()) #  /
-        self.point8_side = ((6.6),(-0.8),())  #} turn back another 90 degres here 
-        #or                                             
-        self.point8_front = ((5.8),(-0.2),())  #} turn 180         this is for if we go to front 
+        self.point1 = (5.8,0.2, )    # \                                       drive to left front cargo bay                                  
+        self.point2 = (4.8,2.2, )    # |-- turn 180 degres somwhere in here    1st prep for left loadin bay
+        self.point3 = (0.2,3.38, )   # /                                       drive to loading bay   
+        self.point4 = (6.6,0.8, )   #} turn 90 degres here                     drive to left side cargo bay 
+        self.point5 = (4.7,0.8, )    # \                                       1st prep for right loading bay
+        self.point6 = (3,-1.94, )    # |-- turn back 90 degres somhere here    2nd prep for right loading bay
+        self.point7 = (0.2,-3.38, ) #  /                                       drive to right loading bay
+        self.point8_side = (6.6,-0.8, )  #} turn back another 90 degres here   driving to right side cargo bay to deploy hatch
+        #or 
+        self.point8_front_prep = (4.8,-2.2, )#                                 1st prep for right front cargo bay                                                              
+        self.point9_front = (5.8,-0.2, )  #} turn 180                          drive to right front cargo bay
 
         self.loading_bay_pos = ((), (), ())
         self.cargoship_pos = ((), (), ())
-        self.start_pos = ()
+        self.start_pos = ( , , )
         self.completed_runs = 0
         # TODO find the correct co-ordinates
 
     @state(first=True)
     def drive_to_cargoship(self, initial_call):
-        if initial_call:
+        if self.completed_runs == 0:
+            self.motion.set_waypoints(
+                (self.current_pos, self.point1)
+                )
+            if not self.motion.is_executing:
+                self.chassis.set_inputs(0, 0, 0)
+                self.completed_runs += 1
+                self.next_state_now("deposit_hatch")
+        if self.completed_runs == 1:
+            self.motion.set_waypoints(
+                (self.current_pos, self.point4)
+            )
+            if not self.motion.is_executing:
+                self.chassis.set_inputs(0,0,0)
+                self.completed_runs += 1
+                self.next_state_now("deposit hatch")
+        if self.completed_runs == 2:
+            self.motion.set_waypoints(
+                (self.current_pos, point8_side)
+            )
+            if not self.motion.is_executing:
+                self.chassis.set_inputs(0,0,0)
+                self.completed_runs += 1
+                self.next_state_now("deposit hatch")
+        else:
+            self.next_state_now("done")
+        
+        
+        
+        '''if initial_call:
             self.motion.set_waypoints(
                 (self.current_pos, self.cargoship_pos[self.completed_runs])
             )
         if not self.motion.is_executing:
             self.chassis.set_inputs(0, 0, 0)
             self.completed_runs += 1
-            self.next_state_now("deposit_hatch")
+            self.next_state_now("deposit_hatch")'''
 
     @state
     def deposit_hatch(self, initial_call):
@@ -56,13 +86,42 @@ class LeftStartAuto(AutonomousStateMachine):
 
     @state
     def drive_to_loading_bay(self, initial_call):
-        if initial_call:
+        if self.completed_runs = 1:
+            self.motion.set_waypoints(
+                (self.current_pos, self.point2)
+            )
+            if not self.motion.is_executing:
+                self.motion.set_waypoints(
+                    (self.current_pos, self.point3)
+                )
+                if not self.motion.is_executing:
+                    self.chassis.set_inputs(0,0,0)
+                    self.next_state_now("intake_hatch")
+        if self.completed_runs == 2:
+            self.motion.set_waypoints(
+                (self.current_pos, self.point5)
+            )
+            if not self.motion.is_executing:
+                self.motion.set_waypoints(
+                    (self.current_pos, self.point6)
+                )
+                if not self.motion.is_executing:
+                    self.motion.set_waypoints(
+                        (self.current_pos, self.point7)
+                    )
+                    if not self.motion.is_executing:
+                        self.chassis.set_inputs(0,0,0)
+                        self.next_state_now("intake hatch")
+        else:
+            next_state_now("done")
+        
+        '''if initial_call:
             self.motion.set_waypoints(
                 (self.current_pos, self.loading_bay_pos[self.completed_runs - 1])
             )
             # -1 because we dont have to pickup a hatch on the first run
         if not self.motion.is_executing:
-            self.next_state_now("intake_hatch")
+            self.next_state_now("intake_hatch")'''
 
     @state
     def intake_hatch(self, initial_call):
