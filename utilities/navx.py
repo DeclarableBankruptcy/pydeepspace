@@ -1,6 +1,6 @@
 import math
 
-from robotpy_ext.common_drivers.navx.ahrs import AHRS
+from navx import AHRS
 
 from .imu import IMU
 
