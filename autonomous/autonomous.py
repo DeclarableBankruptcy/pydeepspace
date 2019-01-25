@@ -14,7 +14,7 @@ def reflect_2d_y(v: tuple) -> tuple:
 
 class LeftStartAuto(AutonomousStateMachine):
     MODE_NAME = "LEFT_START_AUTO"
-    DEFAULT = False
+    DEFAULT = True
 
     imu: NavX
     chassis: SwerveChassis
@@ -23,10 +23,10 @@ class LeftStartAuto(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = (5.6, 0.2)
+        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH/2, 0.2)
         self.setup_loading_bay = (4.8, 2.2)
-        self.loading_bay = (0.2, 3.38)
-        self.side_cargo_bay = (6.6, 0.9)
+        self.loading_bay = (0.0 + SwerveChassis.LENGTH/2, 3.38)
+        self.side_cargo_bay = (6.6, 0.9 + SwerveChassis.WIDTH/2)
         # The waypoints we use to move to the other side of the field
         self.cross_point = (4.7, 0.8)
         # points on opposite side of field
@@ -62,9 +62,8 @@ class LeftStartAuto(AutonomousStateMachine):
                 self.pursuit.build_path(
                     (self.opp_loading_bay, self.opp_side_cargo_bay)
                 )
-            else:
-                self.next_state('stop')
-                # return to loading bay for start of teleop
+        if self.pursuit.completed_path and self.completed_runs > 3:
+            self.next_state('stop')
         print(f"odometry = {self.current_pos}")
         if self.pursuit.completed_path:
             self.next_state("deposit_hatch")
@@ -134,7 +133,7 @@ class LeftStartAuto(AutonomousStateMachine):
 
 class RightStartAuto(LeftStartAuto):
     MODE_NAME = "RIGHT_START_AUTO"
-    DEFAULT = True
+    DEFAULT = False
 
     def __init__(self):
         super().__init__()
