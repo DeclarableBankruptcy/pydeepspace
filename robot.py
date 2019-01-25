@@ -10,6 +10,7 @@ from pyswervedrive.swervechassis import SwerveChassis
 from pyswervedrive.swervemodule import SwerveModule
 from utilities.navx import NavX
 from utilities.pure_pursuit import PurePursuit
+from networktables import NetworkTables
 
 
 class Robot(magicbot.MagicRobot):
@@ -57,6 +58,13 @@ class Robot(magicbot.MagicRobot):
         )
         self.imu = NavX()
         self.pursuit = PurePursuit(look_ahead=0.2, ending_tolerance=0.1)
+
+        self.sd = NetworkTables.getTable("SmartDashboard")
+
+        # boilerplate setup for the joystick
+        self.joystick = wpilib.Joystick(0)
+
+        self.spin_rate = 1.5
 
     def teleopInit(self):
         '''Called when teleop starts; optional'''

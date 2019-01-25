@@ -20,6 +20,7 @@ class PurePursuit:
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
         self.ending_tolerance = ending_tolerance
+        self.completed_path = False
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
         """
@@ -35,6 +36,7 @@ class PurePursuit:
         x_1 -= robot_x
         y_2 -= robot_y
         y_1 -= robot_y
+        segment_end = np.array((x_2, y_2))
 
         d_x = x_2 - x_1
         d_y = y_2 - y_1
@@ -62,8 +64,8 @@ class PurePursuit:
                 return intersection_1
             intersection_2[0] = (left_x - right_x) / denominator
             intersection_2[1] = (left_y - right_y) / denominator
-            if np.linalg.norm((intersection_1) - (waypoint_end)) < np.linalg.norm(
-                (intersection_2) - (waypoint_end)
+            if np.linalg.norm((intersection_1) - (segment_end)) < np.linalg.norm(
+                (intersection_2) - (segment_end)
             ):
                 return intersection_1
             else:
@@ -72,12 +74,17 @@ class PurePursuit:
             print("No intersection found")
 
     def build_path(self, waypoints: np.ndarray):
+        self.completed_path = False
         self.waypoints = waypoints
+        self.current_waypoint_number = 0
+        print(self.waypoints)
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
-        if self.current_waypoint_number + 1 >= len(self.waypoints):
-            return
+        if self.current_waypoint_number >= len(self.waypoints)-1:
+            self.completed_path = True
+            print("path completed")
+            return None, None
         goal_point = self.find_intersections(
             self.waypoints[self.current_waypoint_number],
             self.waypoints[self.current_waypoint_number + 1],
@@ -86,7 +93,7 @@ class PurePursuit:
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
             # use the closest point on the segment as our goal
-            
+
             goal_point = self.find_closest_path_point(self.waypoints[self.current_waypoint_number],
             self.waypoints[self.current_waypoint_number + 1], robot_position)
         # goal_point -= robot_position[:2]
@@ -94,7 +101,7 @@ class PurePursuit:
         print(goal_point)
         self.goal_point = goal_point
         changed_waypoint = self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
-        return goal_point, changed_waypoint
+        return changed_waypoint, goal_point
 
 
     def check_progress(self, end_waypoint, robot_position):

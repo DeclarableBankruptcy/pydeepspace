@@ -9,7 +9,6 @@ from utilities.navx import NavX
 class TestPursuitAuto(AutonomousStateMachine):
 
     MODE_NAME = "Test Pursuit Auto"
-    DEFAULT = True
 
     chassis: SwerveChassis
     pursuit: PurePursuit
