@@ -17,6 +17,7 @@ class Aligner(StateMachine):
     vision: Vision
 
     def setup(self):
+        self.successful = False
         self.target_tape_loop_counter = 0
         self.ground_tape_loop_counter = 0
 
@@ -26,7 +27,7 @@ class Aligner(StateMachine):
 
     ground_tape_kP_x = tunable(0.5)  # forward
     ground_tape_kP_y = tunable(1)  # m/s
-    ground_tape_kP_angle = tunable(10)  # 45 degres
+    ground_tape_kP_angle = tunable(1)  # 45 degres
     ground_tape_distance_tolerance_y = tunable(0.02)
     ground_tape_distance_tolerance_x = tunable(
         0.4
@@ -40,9 +41,6 @@ class Aligner(StateMachine):
         The robot will try to correct errors untill they are within target_tape_tolerance
         by strafing and moving in a hyberbolic curve towards the target.
         """
-        target_tape_kP_x = self.target_tape_kP_x
-        target_tape_kP_y = self.target_tape_kP_y
-        target_tape_tolerance = self.target_tape_tolerance
         if initial_call:
             self.target_tape_loop_counter = 0
         error = self.vision.get_target_tape_error()
@@ -51,12 +49,11 @@ class Aligner(StateMachine):
             if self.target_tape_loop_counter > 3:
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
-                return
         else:
-            if abs(error) > target_tape_tolerance:
+            if abs(error) > self.target_tape_tolerance:
                 self.chassis.set_inputs(
-                    (1 - abs(error)) * target_tape_kP_x,
-                    error * target_tape_kP_y,
+                    (1 - abs(error)) * self.target_tape_kP_x,
+                    error * self.target_tape_kP_y,
                     0,
                     field_oriented=False,
                 )
@@ -64,7 +61,6 @@ class Aligner(StateMachine):
                 self.vision.get_ground_tape_error_x
                 or self.vision.get_ground_tape_error_y is not None
             ):
-                self.chassis.set_inputs(0, 0, 0)
                 self.next_state_now("ground_tape_align")
 
     @state
@@ -84,7 +80,6 @@ class Aligner(StateMachine):
             if self.target_tape_loop_counter > 3:
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
-                return
         else:
             if abs(error_x) <= ground_tape_distance_tolerance_x:
                 error_x = 0
@@ -101,14 +96,3 @@ class Aligner(StateMachine):
                     error_angle * self.ground_tape_kP_angle,
                     field_oriented=False,
                 )
-
-            """if abs(error_angle) > ground_tape_angle_tolerance:
-                self.chassis.set_inputs(
-                    0, 0, error_angle * ground_tape_kP_angle, field_oriented=False                    
-                )
-            elif abs(error_y) > ground_tape_distance_tolerance_y:
-                self.chassis.set_inputs(
-                    0, error_y * ground_tape_kP_y, 0, field_oriented=False
-                )
-            else:
-                self.done()"""
