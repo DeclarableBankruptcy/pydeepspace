@@ -36,26 +36,40 @@ class ChassisMotion:
         self.pursuit = VectorPursuit()
         self.last_heading_error = 0
 
-    def set_trajectory(self, waypoints: np.ndarray, end_heading,
-                       start_speed=0.0, end_speed=0.25, smooth=True,
-                       motion_params=(2.5, 2, 1.5), waypoint_corner_radius=None, wait_for_rotate=False):
+    def set_trajectory(
+        self,
+        waypoints: np.ndarray,
+        end_heading,
+        start_speed=0.0,
+        end_speed=0.25,
+        smooth=True,
+        motion_params=(2.5, 2, 1.5),
+        waypoint_corner_radius=None,
+        wait_for_rotate=False,
+    ):
         """ Pass as set of waypoints for the chassis to follow.
         Args:
             waypoints: A numpy array of waypoints that the chassis will follow.
                 Waypoints are themselves arrays, constructed as follows:
                 [x_in_meters, y_in_meters]
         """
-        print(f'original_waypoints {waypoints}')
+        print(f"original_waypoints {waypoints}")
         if smooth:
             if waypoint_corner_radius is None:
                 waypoint_corner_radius = self.waypoint_corner_radius
-            waypoints_smoothed = smooth_waypoints(waypoints, radius=waypoint_corner_radius)
+            waypoints_smoothed = smooth_waypoints(
+                waypoints, radius=waypoint_corner_radius
+            )
         else:
             waypoints_smoothed = [np.array(point) for point in waypoints]
-        print(f'smoothed_waypoints {waypoints_smoothed}')
-        print(f'end_heading {end_heading}')
-        trajectory_length = sum([np.linalg.norm(waypoints_smoothed[i] - waypoints_smoothed[i-1])
-                                 for i in range(1, len(waypoints_smoothed))])
+        print(f"smoothed_waypoints {waypoints_smoothed}")
+        print(f"end_heading {end_heading}")
+        trajectory_length = sum(
+            [
+                np.linalg.norm(waypoints_smoothed[i] - waypoints_smoothed[i - 1])
+                for i in range(1, len(waypoints_smoothed))
+            ]
+        )
         self.end_heading = end_heading
         self.end_distance = trajectory_length
         self.start_segment_tm = time.monotonic()
@@ -68,22 +82,30 @@ class ChassisMotion:
 
         self.wait_for_rotate = wait_for_rotate
         self.started_moving = False
-        print(f'Wait for rotate {self.wait_for_rotate}')
+        print(f"Wait for rotate {self.wait_for_rotate}")
 
         self.enabled = True
         if self.distance_traj_tm < self.heading_traj_tm:
-            print(f'WARNING: Heading trajectory ({self.heading_traj_tm}s) longer than linear trajectory ({self.distance_traj_tm}s)')
+            print(
+                f"WARNING: Heading trajectory ({self.heading_traj_tm}s) longer than linear trajectory ({self.distance_traj_tm}s)"
+            )
 
         self.chassis.heading_hold_off()
 
     def update_linear_profile(self, motion_params, start_speed, end_speed):
         v_max, a_pos, a_neg = motion_params
         self.speed_function, self.distance_traj_tm = generate_trapezoidal_function(
-            0, start_speed, self.end_distance, end_speed,
-            v_max=v_max, a_pos=a_pos, a_neg=a_neg)
+            0,
+            start_speed,
+            self.end_distance,
+            end_speed,
+            v_max=v_max,
+            a_pos=a_pos,
+            a_neg=a_neg,
+        )
         self.linear_position = 0
         self.last_position = self.chassis.position
-        print(f'start_position {self.last_position}')
+        print(f"start_position {self.last_position}")
         self.last_linear_error = 0
         self.linear_error_i = 0
 
@@ -95,8 +117,8 @@ class ChassisMotion:
         delta = constrain_angle(self.end_heading - heading)
         end_heading = heading + delta
         self.heading_function, self.heading_traj_tm = generate_trapezoidal_function(
-            heading, 0, end_heading, 0,
-            v_max=3, a_pos=2, a_neg=2)
+            heading, 0, end_heading, 0, v_max=3, a_pos=2, a_neg=2
+        )
         self.last_heading_error = 0
         self.heading_error_i = 0
 
@@ -122,8 +144,9 @@ class ChassisMotion:
             # TODO: re-enable if we end up not using callback method
             # self.chassis.update_odometry()
 
-            direction_of_motion, next_seg, over = self.pursuit.get_output(self.chassis.position,
-                                                                          self.chassis.speed)
+            direction_of_motion, next_seg, over = self.pursuit.get_output(
+                self.chassis.position, self.chassis.speed
+            )
 
             speed_sp = self.run_speed_controller()
             heading_output, heading_error = self.run_heading_controller()
@@ -135,21 +158,25 @@ class ChassisMotion:
                 if self.chassis.all_aligned:
                     self.started_moving = True
                 else:
-                    self.chassis.set_inputs(vx/100, vy/100, heading_output/100)
+                    self.chassis.set_inputs(vx / 100, vy / 100, heading_output / 100)
 
             self.chassis.set_inputs(vx, vy, heading_output)
 
-            SmartDashboard.putNumber('vector_pursuit_heading', direction_of_motion)
-            SmartDashboard.putNumber('vector_pursuit_speed', speed_sp)
+            SmartDashboard.putNumber("vector_pursuit_heading", direction_of_motion)
+            SmartDashboard.putNumber("vector_pursuit_speed", speed_sp)
 
             if over:
                 if not self.wait_for_rotate:
-                    print(f"Motion over at {self.chassis.position}, heading {self.imu.getAngle()}")
+                    print(
+                        f"Motion over at {self.chassis.position}, heading {self.imu.getAngle()}"
+                    )
                     self.enabled = False
                     self.chassis.set_inputs(0, 0, 0)
                 else:
                     if abs(heading_error) < 0.1:
-                        print(f"Motion over at {self.chassis.position}, heading {self.imu.getAngle()}")
+                        print(
+                            f"Motion over at {self.chassis.position}, heading {self.imu.getAngle()}"
+                        )
                         self.enabled = False
                         self.chassis.set_inputs(0, 0, 0)
 
@@ -170,21 +197,25 @@ class ChassisMotion:
         # calculate the position errror
         pos_error = linear_seg[0] - self.linear_position
         # calucate the derivative of the position error
-        self.d_pos_error = (pos_error - self.last_linear_error)
+        self.d_pos_error = pos_error - self.last_linear_error
         # sum the position error over the timestep
         self.linear_error_i += pos_error
 
         # generate the linear output to the chassis (m/s)
-        speed_sp = (self.kP*pos_error + self.kV*linear_seg[1]
-                    + self.kA*linear_seg[2] + self.kI*self.linear_error_i
-                    + self.kD*self.d_pos_error)
+        speed_sp = (
+            self.kP * pos_error
+            + self.kV * linear_seg[1]
+            + self.kA * linear_seg[2]
+            + self.kI * self.linear_error_i
+            + self.kD * self.d_pos_error
+        )
 
         self.last_position = chassis_pos
         self.last_linear_error = pos_error
 
-        SmartDashboard.putNumber('linear_mp_sp', linear_seg[0])
-        SmartDashboard.putNumber('linear_mp_error', pos_error)
-        SmartDashboard.putNumber('linear_pos', self.linear_position)
+        SmartDashboard.putNumber("linear_mp_sp", linear_seg[0])
+        SmartDashboard.putNumber("linear_mp_error", pos_error)
+        SmartDashboard.putNumber("linear_pos", self.linear_position)
 
         return speed_sp
 
@@ -209,19 +240,23 @@ class ChassisMotion:
         # sum the heading error over the timestep
         self.heading_error_i += heading_error
         # calculate the derivative of the heading error
-        d_heading_error = (heading_error - self.last_heading_error)
+        d_heading_error = heading_error - self.last_heading_error
 
         # generate the rotational output to the chassis
         heading_output = (
-            self.kPh * heading_error + self.kAh * heading_seg[2] + self.kVh * heading_seg[1]
-            + self.heading_error_i*self.kIh + d_heading_error*self.kDh)
+            self.kPh * heading_error
+            + self.kAh * heading_seg[2]
+            + self.kVh * heading_seg[1]
+            + self.heading_error_i * self.kIh
+            + d_heading_error * self.kDh
+        )
 
         # store the current errors to be used to compute the
         # derivatives in the next timestep
         self.last_heading_error = heading_error
 
-        SmartDashboard.putNumber('heading_mp_sp', heading_seg[0])
-        SmartDashboard.putNumber('heading_mp_error', heading_error)
+        SmartDashboard.putNumber("heading_mp_sp", heading_seg[0])
+        SmartDashboard.putNumber("heading_mp_error", heading_error)
 
         return heading_output, heading_error
 

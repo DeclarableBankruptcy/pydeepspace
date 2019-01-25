@@ -41,11 +41,14 @@ class TestPursuitAuto(AutonomousStateMachine):
         # vector = np.array((vx, vy))
         # normalised = vector / np.linalg.norm(vector)
         # self.chassis.set_inputs(normalised[0]/1, normalised[1]/1, 0)
-        error = np.linalg.norm(position[:2] - self.pursuit.waypoints[self.pursuit.current_waypoint_number+1])
+        error = np.linalg.norm(
+            position[:2]
+            - self.pursuit.waypoints[self.pursuit.current_waypoint_number + 1]
+        )
         self.error_i += error
         error_d = error - self.last_error
-        output = error*self.Kp+self.Ki/self.error_i+self.Kd*(error_d/20)
+        output = error * self.Kp + self.Ki / self.error_i + self.Kd * (error_d / 20)
         print(output)
-        self.chassis.set_inputs(output*vx, output*vy, 0)
+        self.chassis.set_inputs(output * vx, output * vy, 0)
         self.loops += 1
         last_error = error

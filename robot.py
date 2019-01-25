@@ -15,6 +15,7 @@ from networktables import NetworkTables
 class Robot(magicbot.MagicRobot):
     module_drive_free_speed: float = 84000.0  # encoder ticks / 100 ms
     chassis: SwerveChassis
+
     def createObjects(self):
         """Create motors and stuff here."""
         self.module_a = SwerveModule(  # top right module now back left
@@ -22,8 +23,8 @@ class Robot(magicbot.MagicRobot):
             "a",
             steer_talon=ctre.TalonSRX(42),
             drive_talon=ctre.TalonSRX(48),
-            x_pos=-(0.375-0.160),
-            y_pos=0.375-0.100,  # x = 0.33 y = 0.28
+            x_pos=-(0.375 - 0.160),
+            y_pos=0.375 - 0.100,  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -31,8 +32,8 @@ class Robot(magicbot.MagicRobot):
             "b",
             steer_talon=ctre.TalonSRX(58),
             drive_talon=ctre.TalonSRX(2),
-            x_pos=0.375-0.160,
-            y_pos=-(0.375-0.100),  # x = 0.31, y = 0.28
+            x_pos=0.375 - 0.160,
+            y_pos=-(0.375 - 0.100),  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -41,8 +42,8 @@ class Robot(magicbot.MagicRobot):
             "c",
             steer_talon=ctre.TalonSRX(51),
             drive_talon=ctre.TalonSRX(52),
-            x_pos=-(0.375-0.160),
-            y_pos=-(0.375-0.100),  # x = 0.33 y = 0.28
+            x_pos=-(0.375 - 0.160),
+            y_pos=-(0.375 - 0.100),  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -50,8 +51,8 @@ class Robot(magicbot.MagicRobot):
             "d",
             steer_talon=ctre.TalonSRX(53),
             drive_talon=ctre.TalonSRX(54),
-            x_pos=0.375-0.160,
-            y_pos=(0.375-0.100),  # x = 0.31, y = 0.28
+            x_pos=0.375 - 0.160,
+            y_pos=(0.375 - 0.100),  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -66,7 +67,7 @@ class Robot(magicbot.MagicRobot):
         self.spin_rate = 1.5
 
     def teleopInit(self):
-        '''Called when teleop starts; optional'''
+        """Called when teleop starts; optional"""
         self.chassis.set_inputs(0, 0, 0)
 
     def teleopPeriodic(self):
@@ -77,12 +78,11 @@ class Robot(magicbot.MagicRobot):
         if self.joystick.getRawButtonPressed(7):
             pass
 
-
         if self.joystick.getRawButtonPressed(10):
             self.imu.resetHeading()
             self.chassis.set_heading_sp(0)
 
-        throttle = (1-self.joystick.getThrottle())/2
+        throttle = (1 - self.joystick.getThrottle()) / 2
         self.sd.putNumber("joy_throttle", throttle)
 
         # this is where the joystick inputs get converted to numbers that are sent
@@ -90,9 +90,15 @@ class Robot(magicbot.MagicRobot):
         # in order to make their response exponential, and to set a dead zone -
         # which just means if it is under a certain value a 0 will be sent
         # TODO: Tune these constants for whatever robot they are on
-        joystick_vx = -rescale_js(self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=4*throttle)
-        joystick_vy = -rescale_js(self.joystick.getX(), deadzone=0.1, exponential=1.5, rate=4*throttle)
-        joystick_vz = -rescale_js(self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate)
+        joystick_vx = -rescale_js(
+            self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=4 * throttle
+        )
+        joystick_vy = -rescale_js(
+            self.joystick.getX(), deadzone=0.1, exponential=1.5, rate=4 * throttle
+        )
+        joystick_vz = -rescale_js(
+            self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate
+        )
         joystick_hat = self.joystick.getPOV()
 
         self.sd.putNumber("joy_vx", joystick_vx)
@@ -100,8 +106,12 @@ class Robot(magicbot.MagicRobot):
         self.sd.putNumber("joy_vz", joystick_vz)
 
         if joystick_vx or joystick_vy or joystick_vz:
-            self.chassis.set_inputs(joystick_vx, joystick_vy, joystick_vz,
-                                    field_oriented=not self.joystick.getRawButton(6))
+            self.chassis.set_inputs(
+                joystick_vx,
+                joystick_vy,
+                joystick_vz,
+                field_oriented=not self.joystick.getRawButton(6),
+            )
         else:
             self.chassis.set_inputs(0, 0, 0)
             # self.module_a.steer_motor.stop()
@@ -126,15 +136,23 @@ class Robot(magicbot.MagicRobot):
     def robotPeriodic(self):
         # super().robotPeriodic()
         self.sd.putNumber("imu_heading", self.imu.getAngle())
-        self.sd.putNumber("module_a_pos_steer", self.module_a.steer_motor.getSelectedSensorPosition(0))
-        self.sd.putNumber("module_b_pos_steer", self.module_b.steer_motor.getSelectedSensorPosition(0))
-        self.sd.putNumber("module_a_pos_drive", self.module_a.drive_motor.getSelectedSensorPosition(0))
-        self.sd.putNumber("module_b_pos_drive", self.module_b.drive_motor.getSelectedSensorPosition(0))
+        self.sd.putNumber(
+            "module_a_pos_steer", self.module_a.steer_motor.getSelectedSensorPosition(0)
+        )
+        self.sd.putNumber(
+            "module_b_pos_steer", self.module_b.steer_motor.getSelectedSensorPosition(0)
+        )
+        self.sd.putNumber(
+            "module_a_pos_drive", self.module_a.drive_motor.getSelectedSensorPosition(0)
+        )
+        self.sd.putNumber(
+            "module_b_pos_drive", self.module_b.drive_motor.getSelectedSensorPosition(0)
+        )
         self.sd.putNumber("current_azimuth_sp_a", self.module_a.current_azimuth_sp)
         self.sd.putNumber("current_azimuth_sp_b", self.module_b.current_azimuth_sp)
         self.sd.putNumber("module_a_offset", self.module_a.steer_enc_offset)
         self.sd.putNumber("module_b_offset", self.module_b.steer_enc_offset)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     wpilib.run(Robot)

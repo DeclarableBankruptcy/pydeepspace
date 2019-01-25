@@ -24,14 +24,14 @@ class Aligner(StateMachine):
     target_tape_kP_y = tunable(1)  # m/s
     target_tape_tolerance = tunable(0.05)  # % of camera view
 
-    ground_tape_kP_x = tunable(0.5)    # forward
-    ground_tape_kP_y = tunable(1)    # m/s
-    ground_tape_kP_angle = tunable(10)     # 45 degres
+    ground_tape_kP_x = tunable(0.5)  # forward
+    ground_tape_kP_y = tunable(1)  # m/s
+    ground_tape_kP_angle = tunable(10)  # 45 degres
     ground_tape_distance_tolerance_y = tunable(0.02)
-    ground_tape_distance_tolerance_x = tunable(0.4) # replace with distance from target tapes when we get it
-    ground_tape_angle_tolerance = tunable(math.pi / 360) # this equals 0.5 degres
-
-    
+    ground_tape_distance_tolerance_x = tunable(
+        0.4
+    )  # replace with distance from target tapes when we get it
+    ground_tape_angle_tolerance = tunable(math.pi / 360)  # this equals 0.5 degres
 
     @state(first=True)
     def target_tape_align(self, initial_call):
@@ -55,11 +55,18 @@ class Aligner(StateMachine):
         else:
             if abs(error) > target_tape_tolerance:
                 self.chassis.set_inputs(
-                    (1 - abs(error)) * target_tape_kP_x, error * target_tape_kP_y, 0, field_oriented=False
+                    (1 - abs(error)) * target_tape_kP_x,
+                    error * target_tape_kP_y,
+                    0,
+                    field_oriented=False,
                 )
-            elif self.vision.get_ground_tape_error_x or self.vision.get_ground_tape_error_y is not None:
-                self.chassis.set_inputs(0,0,0)
+            elif (
+                self.vision.get_ground_tape_error_x
+                or self.vision.get_ground_tape_error_y is not None
+            ):
+                self.chassis.set_inputs(0, 0, 0)
                 self.next_state_now("ground_tape_align")
+
     @state
     def ground_tape_align(self, initial_call):
 
@@ -89,12 +96,13 @@ class Aligner(StateMachine):
                 self.done()
             else:
                 self.chassis(
-                    error_x * self.ground_tape_kP_x, error_y * self.ground_tape_kP_y, error_angle * self.ground_tape_kP_angle, field_oriented=False
+                    error_x * self.ground_tape_kP_x,
+                    error_y * self.ground_tape_kP_y,
+                    error_angle * self.ground_tape_kP_angle,
+                    field_oriented=False,
                 )
-            
-                
 
-            '''if abs(error_angle) > ground_tape_angle_tolerance:
+            """if abs(error_angle) > ground_tape_angle_tolerance:
                 self.chassis.set_inputs(
                     0, 0, error_angle * ground_tape_kP_angle, field_oriented=False                    
                 )
@@ -103,6 +111,4 @@ class Aligner(StateMachine):
                     0, error_y * ground_tape_kP_y, 0, field_oriented=False
                 )
             else:
-                self.done()'''
-        
-            
+                self.done()"""

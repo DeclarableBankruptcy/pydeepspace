@@ -23,10 +23,10 @@ class LeftStartAuto(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH/2, 0.2)
+        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH / 2, 0.2)
         self.setup_loading_bay = (4.8, 2.2)
-        self.loading_bay = (0.0 + SwerveChassis.LENGTH/2, 3.38)
-        self.side_cargo_bay = (6.6, 0.9 + SwerveChassis.WIDTH/2)
+        self.loading_bay = (0.0 + SwerveChassis.LENGTH / 2, 3.38)
+        self.side_cargo_bay = (6.6, 0.9 + SwerveChassis.WIDTH / 2)
         # The waypoints we use to move to the other side of the field
         self.cross_point = (4.7, 0.8)
         # points on opposite side of field
@@ -36,7 +36,7 @@ class LeftStartAuto(AutonomousStateMachine):
         self.opp_side_cargo_bay = reflect_2d_y(self.side_cargo_bay)
         self.opp_cross_point = reflect_2d_y(self.cross_point)
 
-        self.start_pos = (1.2 + SwerveChassis.LENGTH/2, 0 + SwerveChassis.WIDTH/2)
+        self.start_pos = (1.2 + SwerveChassis.LENGTH / 2, 0 + SwerveChassis.WIDTH / 2)
         self.completed_runs = 0
 
     def on_enable(self):
@@ -44,26 +44,19 @@ class LeftStartAuto(AutonomousStateMachine):
         self.chassis.odometry_x = self.start_pos[0]
         self.chassis.odometry_y = self.start_pos[1]
         print(f"odometry = {self.current_pos}")
-    
 
     @state(first=True)
     def drive_to_cargo_bay(self, initial_call):
         if initial_call:
             # print(f"odometry = {self.current_pos}")
             if self.completed_runs == 0:
-                self.pursuit.build_path(
-                    (self.start_pos, self.front_cargo_bay)
-                )
+                self.pursuit.build_path((self.start_pos, self.front_cargo_bay))
             elif self.completed_runs == 1:
-                self.pursuit.build_path(
-                    (self.loading_bay, self.side_cargo_bay)
-                )
+                self.pursuit.build_path((self.loading_bay, self.side_cargo_bay))
             elif self.completed_runs == 2:
-                self.pursuit.build_path(
-                    (self.opp_loading_bay, self.opp_side_cargo_bay)
-                )
+                self.pursuit.build_path((self.opp_loading_bay, self.opp_side_cargo_bay))
         if self.pursuit.completed_path and self.completed_runs > 3:
-            self.next_state('stop')
+            self.next_state("stop")
         print(f"odometry = {self.current_pos}")
         if self.pursuit.completed_path:
             self.next_state("deposit_hatch")
@@ -88,15 +81,18 @@ class LeftStartAuto(AutonomousStateMachine):
                 )
             elif self.completed_runs == 2:
                 self.pursuit.build_path(
-                    (self.side_cargo_bay, self.cross_point, self.opp_cross_point, self.opp_loading_bay)
+                    (
+                        self.side_cargo_bay,
+                        self.cross_point,
+                        self.opp_cross_point,
+                        self.opp_loading_bay,
+                    )
                 )
             elif self.completed_runs == 3:
                 # return to the loading bay for start of teleop
-                self.pursuit.build_path(
-                    (self.opp_side_cargo_bay, self.opp_loading_bay)
-                )
+                self.pursuit.build_path((self.opp_side_cargo_bay, self.opp_loading_bay))
         if self.pursuit.completed_path and self.completed_runs > 3:
-            self.next_state('stop')
+            self.next_state("stop")
         print(f"odometry = {self.current_pos}")
         if self.pursuit.completed_path:
             self.next_state("intake_hatch")
@@ -128,7 +124,7 @@ class LeftStartAuto(AutonomousStateMachine):
         vx, vy = direction / np.linalg.norm(direction)
         # TODO investigate using trapezodial trajectory or other motion profiling
         vz = 0  # TODO implement a system to allow for rotation in waypoints
-        self.chassis.set_inputs(vx*1, vy*1, vz)
+        self.chassis.set_inputs(vx * 1, vy * 1, vz)
 
 
 class RightStartAuto(LeftStartAuto):

@@ -1,5 +1,6 @@
 import math
 import numpy as np
+
 # from magicbot import tunable
 
 
@@ -81,28 +82,32 @@ class PurePursuit:
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
-        if self.current_waypoint_number >= len(self.waypoints)-1:
+        if self.current_waypoint_number >= len(self.waypoints) - 1:
             self.completed_path = True
             print("path completed")
             return None, None
         goal_point = self.find_intersections(
             self.waypoints[self.current_waypoint_number],
             self.waypoints[self.current_waypoint_number + 1],
-            robot_position
+            robot_position,
         )
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
             # use the closest point on the segment as our goal
 
-            goal_point = self.find_closest_path_point(self.waypoints[self.current_waypoint_number],
-            self.waypoints[self.current_waypoint_number + 1], robot_position)
+            goal_point = self.find_closest_path_point(
+                self.waypoints[self.current_waypoint_number],
+                self.waypoints[self.current_waypoint_number + 1],
+                robot_position,
+            )
         # goal_point -= robot_position[:2]
         # goal_point = self.robot_orient(*goal_point, robot_position[2])
         print(goal_point)
         self.goal_point = goal_point
-        changed_waypoint = self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
+        changed_waypoint = self.check_progress(
+            self.waypoints[self.current_waypoint_number + 1], robot_position
+        )
         return changed_waypoint, goal_point
-
 
     def check_progress(self, end_waypoint, robot_position):
         """Check if we are close enough to begin the path to the next end_waypoint"""
