@@ -5,7 +5,6 @@ import numpy as np
 import ctre
 import magicbot
 import wpilib
-import ctre
 from pyswervedrive.swervechassis import SwerveChassis
 from pyswervedrive.swervemodule import SwerveModule
 from utilities.navx import NavX
