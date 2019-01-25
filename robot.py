@@ -19,41 +19,45 @@ class Robot(magicbot.MagicRobot):
 
     def createObjects(self):
         """Create motors and stuff here."""
+
+        # a + + b + - c - - d - +
+        x_dist = 0.25
+        y_dist = 0.25
         self.module_a = SwerveModule(  # top right module now back left
             # "a", steer_talon=ctre.TalonSRX(48), drive_talon=ctre.TalonSRX(49),
             "a",
-            steer_talon=ctre.TalonSRX(42),
-            drive_talon=ctre.TalonSRX(48),
-            x_pos=-(0.375 - 0.160),
-            y_pos=0.375 - 0.100,  # x = 0.33 y = 0.28
+            steer_talon=ctre.TalonSRX(1),
+            drive_talon=ctre.TalonSRX(2),
+            x_pos=x_dist,
+            y_pos=y_dist,  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
         self.module_b = SwerveModule(  # bottom left module now front right
             "b",
-            steer_talon=ctre.TalonSRX(58),
-            drive_talon=ctre.TalonSRX(2),
-            x_pos=0.375 - 0.160,
-            y_pos=-(0.375 - 0.100),  # x = 0.31, y = 0.28
+            steer_talon=ctre.TalonSRX(3),
+            drive_talon=ctre.TalonSRX(4),
+            x_pos=x_dist,
+            y_pos=-y_dist,  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
             # "a", steer_talon=ctre.TalonSRX(48), drive_talon=ctre.TalonSRX(49),
             "c",
-            steer_talon=ctre.TalonSRX(51),
-            drive_talon=ctre.TalonSRX(52),
-            x_pos=-(0.375 - 0.160),
-            y_pos=-(0.375 - 0.100),  # x = 0.33 y = 0.28
+            steer_talon=ctre.TalonSRX(5),
+            drive_talon=ctre.TalonSRX(6),
+            x_pos=-x_dist,
+            y_pos=-y_dist,  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
         self.module_d = SwerveModule(  # bottom left module now front right
             "d",
-            steer_talon=ctre.TalonSRX(53),
-            drive_talon=ctre.TalonSRX(54),
-            x_pos=0.375 - 0.160,
-            y_pos=(0.375 - 0.100),  # x = 0.31, y = 0.28
+            steer_talon=ctre.TalonSRX(7),
+            drive_talon=ctre.TalonSRX(8),
+            x_pos=-x_dist,
+            y_pos=y_dist,  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
         )
@@ -125,14 +129,26 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_heading_sp(constrained_angle)
 
     def testPeriodic(self):
-        if self.joystick.getRawButtonPressed(6):
-            self.module_a.store_steer_offsets()
-            self.module_b.store_steer_offsets()
-            print("offsets changed")
+        joystick_vx = -rescale_js(
+            self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
+        )
+        self.sd.putNumber("joy_vx", joystick_vx)
 
-        if self.joystick.getRawButtonPressed(3):
-            self.module_b.drive_motor.set(ctre.ControlMode.PercentOutput, 1)
-        print(self.module_b.drive_motor.getSelectedSensorVelocity(0))
+        # 7 8
+        # 9 10
+        if self.joystick.getRawButton(7):
+            self.module_a.store_steer_offsets()
+            self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+        if self.joystick.getRawButton(9):
+            self.module_b.store_steer_offsets()
+            self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+
+        if self.joystick.getRawButton(10):
+            self.module_c.store_steer_offsets()
+            self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+        if self.joystick.getRawButton(8):
+            self.module_d.store_steer_offsets()
+            self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
 
     def robotPeriodic(self):
         # super().robotPeriodic()
