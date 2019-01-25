@@ -7,6 +7,7 @@ import magicbot
 import wpilib
 from pyswervedrive.swervechassis import SwerveChassis
 from pyswervedrive.swervemodule import SwerveModule
+from utilities.functions import rescale_js, constrain_angle
 from utilities.navx import NavX
 from utilities.pure_pursuit import PurePursuit
 from networktables import NetworkTables
