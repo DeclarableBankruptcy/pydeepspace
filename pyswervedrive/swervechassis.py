@@ -18,8 +18,8 @@ class SwerveChassis:
     module_d: SwerveModule
 
     # tunables here purely for debugging
-    odometry_x = tunable(0)
-    odometry_y = tunable(0)
+    # odometry_x = tunable(0)
+    # odometry_y = tunable(0)
     # odometry_theta = tunable(0)
     # odometry_x_vel = tunable(0)
     # odometry_y_vel = tunable(0)
@@ -173,6 +173,8 @@ class SwerveChassis:
             module.update_odometry()
             odometry_x, odometry_y = module.get_cartesian_delta()
             velocity_x, velocity_y = module.get_cartesian_vel()
+            # print(module.get_cartesian_vel())
+            # print(module.get_cartesian_delta())
             odometry_outputs[i * 2, 0] = odometry_x
             odometry_outputs[i * 2 + 1, 0] = odometry_y
             velocity_outputs[i * 2, 0] = velocity_x
@@ -274,7 +276,7 @@ class SwerveChassis:
 
     @property
     def position(self):
-        return np.array([[self.odometry_x], [self.odometry_y]], dtype=float)
+        return self.odometry_x, self.odometry_y
 
     @property
     def speed(self):

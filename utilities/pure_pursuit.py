@@ -8,7 +8,7 @@ class PurePursuit:
     """
     Pure Pursuit controller for navigation with absolute waypoints
 
-    Uses the method outlined here
+    Uses the method outlined here with some changes to be suitible for a swervedrive
     https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
     """
 
@@ -22,6 +22,7 @@ class PurePursuit:
         self.look_ahead = look_ahead
         self.ending_tolerance = ending_tolerance
         self.completed_path = False
+        self.distance_traveled = 0
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
         """
@@ -75,6 +76,8 @@ class PurePursuit:
             print("No intersection found")
 
     def build_path(self, waypoints: np.ndarray):
+        self.last_robot_x = waypoints[0][0]
+        self.last_robot_y = waypoints[0][1]
         self.completed_path = False
         self.waypoints = waypoints
         self.current_waypoint_number = 0
@@ -82,42 +85,47 @@ class PurePursuit:
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
+        segment_start = self.waypoints[self.current_waypoint_number]
+        segment_end = self.waypoints[self.current_waypoint_number + 1]
         if self.current_waypoint_number >= len(self.waypoints) - 1:
             self.completed_path = True
             print("path completed")
             return None, None
         goal_point = self.find_intersections(
-            self.waypoints[self.current_waypoint_number],
-            self.waypoints[self.current_waypoint_number + 1],
+            segment_start,
+            segment_end,
             robot_position,
         )
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
             # use the closest point on the segment as our goal
-
             goal_point = self.find_closest_path_point(
-                self.waypoints[self.current_waypoint_number],
-                self.waypoints[self.current_waypoint_number + 1],
+                segment_start,
+                segment_end,
                 robot_position,
             )
-        # goal_point -= robot_position[:2]
-        # goal_point = self.robot_orient(*goal_point, robot_position[2])
-        print(goal_point)
+        self.distance_along_path(robot_position)
+        # print(goal_point)
         self.goal_point = goal_point
-        changed_waypoint = self.check_progress(
-            self.waypoints[self.current_waypoint_number + 1], robot_position
-        )
+        if self.distance_traveled >= math.hypot(segment_end[0] - segment_start[0], segment_end[1] - segment_start[1]):
+            self.current_waypoint_number += 1
+            changed_waypoint = True
+        else:
+            changed_waypoint = False
+        # changed_waypoint = self.check_progress(
+        #     self.waypoints[self.current_waypoint_number + 1], robot_position
+        # )
         return changed_waypoint, goal_point
 
     def check_progress(self, end_waypoint, robot_position):
         """Check if we are close enough to begin the path to the next end_waypoint"""
-        end_point_x, end_point_y = end_waypoint[0], end_waypoint[1]
-        robot_x, robot_y, _ = robot_position
-        difference_x = abs(end_point_x) - abs(robot_x)
-        difference_y = abs(end_point_y) - abs(robot_y)
-        if math.sqrt(difference_x ** 2 + difference_y ** 2) < self.ending_tolerance:
-            self.current_waypoint_number += 1
-            return True
+        pass
+        # end_point_x, end_point_y = end_waypoint[0], end_waypoint[1]
+        # difference_x = abs(end_point_x) - abs(robot_x)
+        # difference_y = abs(end_point_y) - abs(robot_y)
+        # if math.sqrt(difference_x ** 2 + difference_y ** 2) < self.ending_tolerance:
+        #     self.current_waypoint_number += 1
+        #     return True
 
     def find_closest_path_point(self, segment_start, segment_end, robot_position):
         """
@@ -138,6 +146,14 @@ class PurePursuit:
             return -1
         else:
             return 1
+    
+    def distance_along_path(self, robot_position):
+        robot_x, robot_y, _ = robot_position
+        self.distance_traveled += math.hypot(robot_x-self.last_robot_x, robot_y - self.last_robot_y)
+        self.last_robot_x = robot_x
+        self.last_robot_y = robot_y
+        print(self.distance_traveled)
+        return self.distance_traveled
 
     def robot_orient(self, x, y, heading):
         """Turn a vx and vy relative to the field into a vx and vy based on the

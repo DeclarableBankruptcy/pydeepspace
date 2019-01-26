@@ -9,7 +9,7 @@ class SwerveModule:
     # TODO: change back for real robot
     SRX_MAG_COUNTS_PER_REV: int = 4096
     WHEEL_DIAMETER: float = 0.0254 * 3
-    DRIVE_ENCODER_GEAR_REDUCTION: float = 100 / 12 * 46 / 26
+    DRIVE_ENCODER_GEAR_REDUCTION: float = 100 / 12 * 46 / 26  # TODO check this value
     STEER_COUNTS_PER_REV = 4096
     STEER_COUNTS_PER_RADIAN = STEER_COUNTS_PER_REV / math.tau
 
@@ -17,7 +17,7 @@ class SwerveModule:
     drive_counts_per_radian = drive_counts_per_rev / math.tau
     # odometry is consistently slightly off, need a fudge factor to compensate
     # TODO: Tune the fudge factor
-    drive_odometry_fudge_factor = 1 / 1.04
+    drive_odometry_fudge_factor = 1 / 1
     drive_counts_per_metre = (
         drive_counts_per_rev / (math.pi * WHEEL_DIAMETER) * drive_odometry_fudge_factor
     )
@@ -154,6 +154,7 @@ class SwerveModule:
         """
         steer_delta = constrain_angle(self.measured_azimuth - self.zero_azimuth)
         drive_delta = self.wheel_pos - self.zero_drive_pos
+        print(steer_delta, drive_delta)
         return steer_delta, drive_delta
 
     def get_cartesian_delta(self):

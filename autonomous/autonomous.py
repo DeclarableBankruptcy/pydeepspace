@@ -14,7 +14,7 @@ def reflect_2d_y(v: tuple) -> tuple:
 
 class LeftStartAuto(AutonomousStateMachine):
     MODE_NAME = "LEFT_START_AUTO"
-    DEFAULT = True
+    # DEFAULT = True
 
     imu: NavX
     chassis: SwerveChassis
@@ -43,7 +43,7 @@ class LeftStartAuto(AutonomousStateMachine):
         super().on_enable()
         self.chassis.odometry_x = self.start_pos[0]
         self.chassis.odometry_y = self.start_pos[1]
-        print(f"odometry = {self.current_pos}")
+        # print(f"odometry = {self.current_pos}")
 
     @state(first=True)
     def drive_to_cargo_bay(self, initial_call):
@@ -57,7 +57,7 @@ class LeftStartAuto(AutonomousStateMachine):
                 self.pursuit.build_path((self.opp_loading_bay, self.opp_side_cargo_bay))
         if self.pursuit.completed_path and self.completed_runs > 3:
             self.next_state("stop")
-        print(f"odometry = {self.current_pos}")
+        # print(f"odometry = {self.current_pos}")
         if self.pursuit.completed_path:
             self.next_state("deposit_hatch")
             self.completed_runs += 1
@@ -65,7 +65,7 @@ class LeftStartAuto(AutonomousStateMachine):
 
     @state
     def deposit_hatch(self, initial_call):
-        self.next_state_now("drive_to_loading_bay")
+        self.next_state("drive_to_loading_bay")
 
         # if initial_call:
         #     self.hatchcontroller.engage()
@@ -80,6 +80,9 @@ class LeftStartAuto(AutonomousStateMachine):
                     (self.front_cargo_bay, self.setup_loading_bay, self.loading_bay)
                 )
             elif self.completed_runs == 2:
+                # we only have a quater field, stop here
+                self.next_state_now("stop")
+                return
                 self.pursuit.build_path(
                     (
                         self.side_cargo_bay,
@@ -93,7 +96,7 @@ class LeftStartAuto(AutonomousStateMachine):
                 self.pursuit.build_path((self.opp_side_cargo_bay, self.opp_loading_bay))
         if self.pursuit.completed_path and self.completed_runs > 3:
             self.next_state("stop")
-        print(f"odometry = {self.current_pos}")
+        # print(f"odometry = {self.current_pos}")
         if self.pursuit.completed_path:
             self.next_state("intake_hatch")
         self.follow_path()
@@ -119,12 +122,12 @@ class LeftStartAuto(AutonomousStateMachine):
     def follow_path(self):
         changed_segment, direction = self.pursuit.compute_direction(self.current_pos)
         if self.pursuit.completed_path or changed_segment:
-            self.chassis.set_inputs(0, 0, 0)
+            self.chassis.set_inputs(0, 0, 0, field_oriented=False)
             return
         vx, vy = direction / np.linalg.norm(direction)
         # TODO investigate using trapezodial trajectory or other motion profiling
         vz = 0  # TODO implement a system to allow for rotation in waypoints
-        self.chassis.set_inputs(vx * 1, vy * 1, vz)
+        self.chassis.set_inputs(vx * 0.75, vy * 0.75, vz)
 
 
 class RightStartAuto(LeftStartAuto):

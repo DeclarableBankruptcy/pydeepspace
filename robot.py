@@ -74,6 +74,9 @@ class Robot(magicbot.MagicRobot):
         self.joystick = wpilib.Joystick(0)
 
         self.spin_rate = 1.5
+    
+    def disabledPeriodic(self):
+        self.imu.resetHeading()
 
     def teleopInit(self):
         """Called when teleop starts; optional"""
@@ -157,11 +160,15 @@ class Robot(magicbot.MagicRobot):
     def robotPeriodic(self):
         # super().robotPeriodic()
         self.sd.putNumber("imu_heading", self.imu.getAngle())
+        self.sd.putNumber("odometry_x", self.chassis.position[0])
+        self.sd.putNumber("odometry_y", self.chassis.position[1])
         for module in self.chassis.modules:
             self.sd.putNumber(
                 module.name + "_pos_steer",
                 module.steer_motor.getSelectedSensorPosition(0),
             )
+            self.sd.putNumber(module.name + "_pos_drive",
+                module.drive_motor.getSelectedSensorPosition(0))
             try:
                 self.sd.putNumber(module.name + "_setpoint", module.setpoint)
             except:

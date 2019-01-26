@@ -58,34 +58,30 @@ class Aligner(StateMachine):
                     field_oriented=False,
                 )
             elif (
-                self.vision.get_ground_tape_error_x
+                self.vision.get_ground_tape_error_x()
                 or self.vision.get_ground_tape_error_y is not None
             ):
                 self.next_state_now("ground_tape_align")
 
     @state
     def ground_tape_align(self, initial_call):
-
-        ground_tape_angle_tolerance = self.ground_tape_angle_tolerance
-        ground_tape_distance_tolerance_y = self.ground_tape_distance_tolerance_y
-        ground_tape_distance_tolerance_x = self.ground_tape_distance_tolerance_x
-
         if initial_call:
             self.ground_tape_loop_counter = 0
-        error_x = self.vision.get_ground_tape_error_x
-        error_y = self.vision.get_ground_tape_error_y
-        error_angle = self.vision.get_ground_tape_error_angle
+        error_x = self.vision.get_ground_tape_error_x()
+        error_y = self.vision.get_ground_tape_error_y()
+        error_angle = self.vision.get_ground_tape_error_angle()
+        positioned_to_outake = self.vision.get_positioned_to_outake()
         if error_x or error_y is None:
             self.ground_tape_loop_counter += 1
             if self.target_tape_loop_counter > 3:
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
         else:
-            if abs(error_x) <= ground_tape_distance_tolerance_x:
+            if abs(error_x) <= self.ground_tape_distance_tolerance_x:
                 error_x = 0
-            elif abs(error_y) <= ground_tape_distance_tolerance_y:
+            elif abs(error_y) <= self.ground_tape_distance_tolerance_y:
                 error_y = 0
-            elif abs(error_angle) <= ground_tape_angle_tolerance:
+            elif abs(error_angle) <= self.ground_tape_angle_tolerance:
                 error_angle = 0
             elif error_x and error_y and error_angle == 0:
                 self.done()
@@ -96,3 +92,6 @@ class Aligner(StateMachine):
                     error_angle * self.ground_tape_kP_angle,
                     field_oriented=False,
                 )
+        if positioned_to_outake:
+            self.successful = True
+            self.done()

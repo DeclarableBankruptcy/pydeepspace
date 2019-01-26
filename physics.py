@@ -31,8 +31,8 @@ class PhysicsEngine:
         # for modules [a, b, c, d]. used to iterate over them
         # self.module_steer_can_ids = [48, 46, 44, 42]
         # self.module_drive_can_ids = [49, 47, 45, 43]
-        self.module_steer_can_ids = [42, 58, 51, 53]
-        self.module_drive_can_ids = [48, 2, 52, 54]
+        self.module_steer_can_ids = [1, 3, 5, 7]
+        self.module_drive_can_ids = [2, 4, 6, 8]
         self.module_steer_offsets = [0] * 4
         x_off = self.X_WHEELBASE / 2
         y_off = self.Y_WHEELBASE / 2
