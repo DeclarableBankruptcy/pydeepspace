@@ -29,10 +29,14 @@ class Aligner(StateMachine):
     ground_tape_kP_y = tunable(1)  # m/s
     ground_tape_kP_angle = tunable(1)  # 45 degres
     ground_tape_distance_tolerance_y = tunable(0.02)
-    ground_tape_distance_tolerance_x = tunable(
-        0.4
-    )  # replace with distance from target tapes when we get it
+    # ground_tape_distance_tolerance_x = tunable(0.4) 
     ground_tape_angle_tolerance = tunable(math.pi / 360)  # this equals 0.5 degres
+
+    def align(self, deposit, intake):
+        self.align_for_deposit = deposit
+        self.align_for_intake = intake
+
+
 
     @state(first=True)
     def target_tape_align(self, initial_call):
@@ -42,11 +46,11 @@ class Aligner(StateMachine):
         by strafing and moving in a hyberbolic curve towards the target.
         """
         if initial_call:
-            self.target_tape_loop_counter = 0
+            self.loop_counter = 0
         error = self.vision.get_target_tape_error()
         if error is None:
-            self.target_tape_loop_counter += 1
-            if self.target_tape_loop_counter > 3:
+            self.loop_counter += 1
+            if self.loop_counter > 3:
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
         else:
@@ -72,8 +76,8 @@ class Aligner(StateMachine):
         error_angle = self.vision.get_ground_tape_error_angle()
         positioned_to_outake = self.vision.get_positioned_to_outake()
         if error_x or error_y is None:
-            self.ground_tape_loop_counter += 1
-            if self.target_tape_loop_counter > 3:
+            self.loop_counter += 1
+            if self.loop_counter > 3:
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
         else:
@@ -84,9 +88,10 @@ class Aligner(StateMachine):
             elif abs(error_angle) <= self.ground_tape_angle_tolerance:
                 error_angle = 0
             elif error_x and error_y and error_angle == 0:
+                return True
                 self.done()
             else:
-                self.chassis(
+                self.chassis.set_inputs(
                     error_x * self.ground_tape_kP_x,
                     error_y * self.ground_tape_kP_y,
                     error_angle * self.ground_tape_kP_angle,

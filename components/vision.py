@@ -12,9 +12,15 @@ class Vision:
             NetworkTables.NotifyFlags.NEW | NetworkTables.NotifyFlags.UPDATE,
         )
 
-        self.ground_tape_x = self.nt.getEntry("ground_tape_x")
-        self.ground_tape_x.addListener(
-            self.new_ground_value_x,
+        self.target_tape_deposting_range = self.nt.getEntry("target_tape_deposting_range")
+        self.target_tape_deposting_range.addListener(
+            self.new_target_value_deposting_range,
+            NetworkTables.NotifyFlags.NEW | NetworkTables.NotifyFlags.UPDATE,
+        )
+
+        self.ground_tape_error_x = self.nt.getEntry("ground_tape_error_x")
+        self.ground_tape_error_x.addListener(
+            self.new_ground_value_y,
             NetworkTables.NotifyFlags.NEW | NetworkTables.NotifyFlags.UPDATE,
         )
 
@@ -70,6 +76,12 @@ class Vision:
             return 0
         else:
             return self.target_tape_error_value
+    
+    def get_target_tape_deposting_ragne(self):
+        if self.target_tape_deposting_range == True:
+            return True
+        else:
+            return False
 
     def get_ground_tape_error_x(self):
         if not -1 <= self.ground_x_value <= 1:
