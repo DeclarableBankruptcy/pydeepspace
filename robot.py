@@ -32,15 +32,17 @@ class Robot(magicbot.MagicRobot):
             y_pos=y_dist,  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
+            reverse_drive_direction=True,
         )
         self.module_b = SwerveModule(  # bottom left module now front right
             "b",
             steer_talon=ctre.TalonSRX(3),
             drive_talon=ctre.TalonSRX(4),
-            x_pos=x_dist,
-            y_pos=-y_dist,  # x = 0.31, y = 0.28
+            x_pos=-x_dist,
+            y_pos=y_dist,  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
+            reverse_drive_direction=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
             # "a", steer_talon=ctre.TalonSRX(48), drive_talon=ctre.TalonSRX(49),
@@ -51,15 +53,17 @@ class Robot(magicbot.MagicRobot):
             y_pos=-y_dist,  # x = 0.33 y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
+            reverse_drive_direction=True,
         )
         self.module_d = SwerveModule(  # bottom left module now front right
             "d",
             steer_talon=ctre.TalonSRX(7),
             drive_talon=ctre.TalonSRX(8),
-            x_pos=-x_dist,
-            y_pos=y_dist,  # x = 0.31, y = 0.28
+            x_pos=x_dist,
+            y_pos=-y_dist,  # x = 0.31, y = 0.28
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
+            reverse_drive_direction=True,
         )
         self.imu = NavX()
         self.pursuit = PurePursuit(look_ahead=0.2, ending_tolerance=0.1)
@@ -153,22 +157,15 @@ class Robot(magicbot.MagicRobot):
     def robotPeriodic(self):
         # super().robotPeriodic()
         self.sd.putNumber("imu_heading", self.imu.getAngle())
-        self.sd.putNumber(
-            "module_a_pos_steer", self.module_a.steer_motor.getSelectedSensorPosition(0)
-        )
-        self.sd.putNumber(
-            "module_b_pos_steer", self.module_b.steer_motor.getSelectedSensorPosition(0)
-        )
-        self.sd.putNumber(
-            "module_a_pos_drive", self.module_a.drive_motor.getSelectedSensorPosition(0)
-        )
-        self.sd.putNumber(
-            "module_b_pos_drive", self.module_b.drive_motor.getSelectedSensorPosition(0)
-        )
-        self.sd.putNumber("current_azimuth_sp_a", self.module_a.current_azimuth_sp)
-        self.sd.putNumber("current_azimuth_sp_b", self.module_b.current_azimuth_sp)
-        self.sd.putNumber("module_a_offset", self.module_a.steer_enc_offset)
-        self.sd.putNumber("module_b_offset", self.module_b.steer_enc_offset)
+        for module in self.chassis.modules:
+            self.sd.putNumber(
+                module.name + "_pos_steer",
+                module.steer_motor.getSelectedSensorPosition(0),
+            )
+            try:
+                self.sd.putNumber(module.name + "_setpoint", module.setpoint)
+            except:
+                pass
 
 
 if __name__ == "__main__":
