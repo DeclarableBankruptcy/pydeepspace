@@ -5,7 +5,7 @@ from wpilib import PIDController
 from wpilib.interfaces import PIDOutput
 from utilities.navx import NavX
 from pyswervedrive.swervemodule import SwerveModule
-
+from wpilib import SmartDashboard
 
 class SwerveChassis:
     WIDTH = 0.75
@@ -38,13 +38,15 @@ class SwerveChassis:
         # Heading PID controller
         self.heading_pid_out = ChassisPIDOutput()
         self.heading_pid = PIDController(
-            Kp=2.0,
+            Kp=4.5,
             Ki=0.0,
-            Kd=1.0,
+            Kd=0.0,
             source=self.imu.getAngle,
             output=self.heading_pid_out,
             period=1 / 50,
         )
+        SmartDashboard.putData(self.heading_pid)
+        
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-2, 2)
         self.heading_pid.setContinuous()

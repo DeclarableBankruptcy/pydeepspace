@@ -77,6 +77,8 @@ class Robot(magicbot.MagicRobot):
 
         self.spin_rate = 1.5
 
+        wpilib.SmartDashboard.putData("gyro", self.imu.ahrs)
+
     def disabledPeriodic(self):
         self.chassis.set_inputs(0, 0, 0)
         self.imu.resetHeading()
@@ -90,7 +92,7 @@ class Robot(magicbot.MagicRobot):
         Process inputs from the driver station here.
         This is run each iteration of the control loop before magicbot components are executed.
         """
-        self.chassis.heading_hold_off()
+        # self.chassis.heading_hold_off()
         if self.joystick.getRawButtonPressed(7):
             pass
 
@@ -139,11 +141,9 @@ class Robot(magicbot.MagicRobot):
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(constrained_angle)
-        
+
         if self.joystick.getRawButtonPressed(8):
             self.chassis.set_inputs(0.75, 0, 0)
-
-
 
     def testPeriodic(self):
         joystick_vx = -rescale_js(
@@ -214,20 +214,20 @@ class Robot(magicbot.MagicRobot):
                     self.module_d.steer_motor.getSelectedSensorPosition(0)
                     - self.offset_rotation_rate,
                 )
-        
-        if self.joystick.getRawButtonPressed(8): 
+
+        if self.joystick.getRawButtonPressed(8):
             for module in self.chassis.modules:
                 module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
-        
+
         if self.joystick.getRawButtonPressed(12):
             for module in self.chassis.modules:
-                module.steer_motor.set(ctre.ControlMode.Position, module.steer_enc_offset)
-
-
+                module.steer_motor.set(
+                    ctre.ControlMode.Position, module.steer_enc_offset
+                )
 
     def robotPeriodic(self):
-        # super().robotPeriodic()
-        self.sd.putNumber("imu_heading", self.imu.getAngle())
+        super().robotPeriodic()
+
         self.sd.putNumber("odometry_x", self.chassis.position[0])
         self.sd.putNumber("odometry_y", self.chassis.position[1])
         for module in self.chassis.modules:

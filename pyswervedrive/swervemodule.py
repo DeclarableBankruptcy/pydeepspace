@@ -28,6 +28,8 @@ class SwerveModule:
     drive_velocity_to_native_units = drive_counts_per_metre * 0.1
     drive_angular_vel_to_native_units = drive_counts_per_radian * 0.1
 
+    offset_custom_index = 0
+
     def __init__(
         self,
         name: str,
@@ -72,6 +74,10 @@ class SwerveModule:
 
         self.update_odometry()
 
+        stored_offset = self.steer_motor.configGetCustomParam(paramIndex=self.offset_custom_index, timoutMs=10)
+        if stored_offset:
+            self.steer_enc_offset_entry.setDouble(stored_offset)
+
         # NOTE: In all the following config* calls to the drive and steer
         # motors, the last argument is the timeout in milliseconds. See
         # robotpy-ctre documentation for details.
@@ -101,7 +107,7 @@ class SwerveModule:
         # changes sign of motor throttle values
         self.drive_motor.setInverted(self.reverse_drive_direction)
         # TODO: change back to original constants once we get on to real robot
-        self.drive_motor.config_kP(0, 0.1, 10)  # 0.5, 0.002, 0,
+        self.drive_motor.config_kP(0, 0.05, 10)  # 0.5, 0.002, 0,
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
         self.drive_motor.config_kF(0, 1024.0 / self.drive_free_speed, 10)
@@ -138,9 +144,9 @@ class SwerveModule:
 
     def store_steer_offsets(self):
         """Store the current steer positions as the offsets."""
-        self.steer_enc_offset_entry.setDouble(
-            self.steer_motor.getSelectedSensorPosition(0)
-        )
+        pos = self.steer_motor.getSelectedSensorPosition(0)
+        self.steer_enc_offset_entry.setDouble(pos)
+        self.steer_motor.configSetCustomParam(pos, paramIndex=self.offset_custom_index, timeoutMs=10)
 
     def reset_encoder_delta(self):
         """Re-zero the encoder deltas as returned from
