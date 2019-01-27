@@ -16,11 +16,10 @@ class PurePursuit:
     # speed_modifier = tunable(0)
     # ending_tolerance = tunable(0) # m
 
-    def __init__(self, look_ahead, ending_tolerance):
+    def __init__(self, look_ahead):
         self.waypoints = []
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
-        self.ending_tolerance = ending_tolerance
         self.completed_path = False
         self.distance_traveled = 0
 
@@ -76,6 +75,13 @@ class PurePursuit:
             print("No intersection found")
 
     def build_path(self, waypoints):
+        """
+        Take in a list of waypoints used to build a path.
+
+        The waypoints must be a tuple (x, y), this method will 
+        create waypoints with these co-ordinates and distance 
+        along the path from the start of the trajectory.
+        """
         self.last_robot_x = waypoints[0][0]
         self.last_robot_y = waypoints[0][1]
         self.completed_path = False
@@ -87,9 +93,7 @@ class PurePursuit:
             x, y = waypoint
             waypoint_distance += math.hypot(x - previous_waypoint[0], y - previous_waypoint[1])
             previous_waypoint = waypoint
-            self.waypoints.append((x, y, waypoint_distance))
-            
-            
+            self.waypoints.append((x, y, waypoint_distance))  
         self.current_waypoint_number = 0
         print(self.waypoints)
 
@@ -101,8 +105,6 @@ class PurePursuit:
             return None, None
         segment_start = self.waypoints[self.current_waypoint_number]
         segment_end = self.waypoints[self.current_waypoint_number + 1]
-        first_waypoint = self.waypoints[0]
-        last_waypoint = self.waypoints[-1]
         goal_point = self.find_intersections(
             segment_start,
             segment_end,
@@ -110,44 +112,19 @@ class PurePursuit:
         )
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
-            # use the closest point on the segment as our goal
+            # use the next waypoint as our goal point
             goal_point = segment_end
         self.distance_along_path(robot_position)
         # print(goal_point)
         self.goal_point = goal_point
         if self.distance_traveled >= segment_end[2]:
+            # if we have reached the end of our current segment
             self.current_waypoint_number += 1
             changed_waypoint = True
             print("changed segment")
         else:
             changed_waypoint = False
-        # changed_waypoint = self.check_progress(
-        #     self.waypoints[self.current_waypoint_number + 1], robot_position
-        # )
         return changed_waypoint, goal_point
-
-    def check_progress(self, end_waypoint, robot_position):
-        """Check if we are close enough to begin the path to the next end_waypoint"""
-        pass
-        # end_point_x, end_point_y = end_waypoint[0], end_waypoint[1]
-        # difference_x = abs(end_point_x) - abs(robot_x)
-        # difference_y = abs(end_point_y) - abs(robot_y)
-        # if math.sqrt(difference_x ** 2 + difference_y ** 2) < self.ending_tolerance:
-        #     self.current_waypoint_number += 1
-        #     return True
-
-    def find_closest_path_point(self, segment_start, segment_end, robot_position):
-        """
-        Finds the closest point to the robot on the path.
-        """
-        x_1, y_1 = segment_start
-        x_2, y_2 = segment_end
-        x_robot, y_robot, _ = robot_position
-        m = (y_1 - y_2) / (x_1 - x_2)
-        m_orth = -1 / m
-        x = (y_1 - y_robot + m_orth * x_robot - m * x_1) / (m_orth - m)
-        y = m * (x - x_1) + y_1
-        return x, y
 
     def sgn(self, number):
         """Returns the sign of a number, 0 is positive"""
@@ -157,25 +134,15 @@ class PurePursuit:
             return 1
     
     def distance_along_path(self, robot_position):
+        """
+        Find the robots position on the path using odometry.
+        
+        Every timestep, add the distance the robot has travelled to a
+        running total used to check for waypoints.
+        """
         robot_x, robot_y, _ = robot_position
         self.distance_traveled += math.hypot(robot_x-self.last_robot_x, robot_y - self.last_robot_y)
         self.last_robot_x = robot_x
         self.last_robot_y = robot_y
         print(self.distance_traveled)
         return self.distance_traveled
-
-    def robot_orient(self, x, y, heading):
-        """Turn a vx and vy relative to the field into a vx and vy based on the
-        robot.
-
-        Args:
-            vx: vx to robot orient
-            vy: vy to robot orient
-            heading: current heading of the robot. In radians CCW from +x axis.
-        Returns:
-            float: robot oriented vx speed
-            float: robot oriented vy speed
-        """
-        oriented_x = x * math.cos(heading) + y * math.sin(heading)
-        oriented_y = -x * math.sin(heading) + y * math.cos(heading)
-        return oriented_x, oriented_y
