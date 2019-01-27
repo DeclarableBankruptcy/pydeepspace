@@ -232,7 +232,9 @@ class SwerveModule:
         # will unwind
         azimuth_to_set = self.current_azimuth_sp + delta
         # convert the direction to encoder counts to set as the closed-loop setpoint
-        self.setpoint = azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
+        self.setpoint = (
+            azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
+        )
         self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
         self.current_azimuth_sp = azimuth_to_set
 

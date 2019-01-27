@@ -12,7 +12,9 @@ class Vision:
             NetworkTables.NotifyFlags.NEW | NetworkTables.NotifyFlags.UPDATE,
         )
 
-        self.target_tape_deposting_range = self.nt.getEntry("target_tape_deposting_range")
+        self.target_tape_deposting_range = self.nt.getEntry(
+            "target_tape_deposting_range"
+        )
         self.target_tape_deposting_range.addListener(
             self.new_target_value_deposting_range,
             NetworkTables.NotifyFlags.NEW | NetworkTables.NotifyFlags.UPDATE,
@@ -64,7 +66,7 @@ class Vision:
     def new_ground_value_angle(self, entry, key, value, param):
         # self.time = time.monotonic()
         self.ground_angle_value = value
-    
+
     def new_positioned_to_outake_value(self, entry, key, value, param):
         # self.time = time.monotonic()
         self.positioned_to_outake_value = value
@@ -76,7 +78,7 @@ class Vision:
             return 0
         else:
             return self.target_tape_error_value
-    
+
     def get_target_tape_deposting_ragne(self):
         if self.target_tape_deposting_range == True:
             return True

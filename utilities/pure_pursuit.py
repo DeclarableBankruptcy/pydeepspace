@@ -78,8 +78,8 @@ class PurePursuit:
         """
         Take in a list of waypoints used to build a path.
 
-        The waypoints must be a tuple (x, y), this method will 
-        create waypoints with these co-ordinates and distance 
+        The waypoints must be a tuple (x, y), this method will
+        create waypoints with these co-ordinates and distance
         along the path from the start of the trajectory.
         """
         self.last_robot_x = waypoints[0][0]
@@ -91,9 +91,11 @@ class PurePursuit:
         previous_waypoint = waypoints[0]
         for waypoint in waypoints:
             x, y = waypoint
-            waypoint_distance += math.hypot(x - previous_waypoint[0], y - previous_waypoint[1])
+            waypoint_distance += math.hypot(
+                x - previous_waypoint[0], y - previous_waypoint[1]
+            )
             previous_waypoint = waypoint
-            self.waypoints.append((x, y, waypoint_distance))  
+            self.waypoints.append((x, y, waypoint_distance))
         self.current_waypoint_number = 0
         print(self.waypoints)
 
@@ -105,11 +107,7 @@ class PurePursuit:
             return None, None
         segment_start = self.waypoints[self.current_waypoint_number]
         segment_end = self.waypoints[self.current_waypoint_number + 1]
-        goal_point = self.find_intersections(
-            segment_start,
-            segment_end,
-            robot_position,
-        )
+        goal_point = self.find_intersections(segment_start, segment_end, robot_position)
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
             # use the next waypoint as our goal point
@@ -132,16 +130,18 @@ class PurePursuit:
             return -1
         else:
             return 1
-    
+
     def distance_along_path(self, robot_position):
         """
         Find the robots position on the path using odometry.
-        
+
         Every timestep, add the distance the robot has travelled to a
         running total used to check for waypoints.
         """
         robot_x, robot_y, _ = robot_position
-        self.distance_traveled += math.hypot(robot_x-self.last_robot_x, robot_y - self.last_robot_y)
+        self.distance_traveled += math.hypot(
+            robot_x - self.last_robot_x, robot_y - self.last_robot_y
+        )
         self.last_robot_x = robot_x
         self.last_robot_y = robot_y
         print(self.distance_traveled)

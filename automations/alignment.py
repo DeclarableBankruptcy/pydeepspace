@@ -29,14 +29,12 @@ class Aligner(StateMachine):
     ground_tape_kP_y = tunable(1)  # m/s
     ground_tape_kP_angle = tunable(1)  # 45 degres
     ground_tape_distance_tolerance_y = tunable(0.02)
-    # ground_tape_distance_tolerance_x = tunable(0.4) 
+    ground_tape_distance_tolerance_x = tunable(0.4)
     ground_tape_angle_tolerance = tunable(math.pi / 360)  # this equals 0.5 degres
 
     def align(self, deposit, intake):
         self.align_for_deposit = deposit
         self.align_for_intake = intake
-
-
 
     @state(first=True)
     def target_tape_align(self, initial_call):
@@ -88,8 +86,8 @@ class Aligner(StateMachine):
             elif abs(error_angle) <= self.ground_tape_angle_tolerance:
                 error_angle = 0
             elif error_x and error_y and error_angle == 0:
-                return True
                 self.done()
+                return True
             else:
                 self.chassis.set_inputs(
                     error_x * self.ground_tape_kP_x,

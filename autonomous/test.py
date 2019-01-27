@@ -55,16 +55,13 @@ class TestPursuitAuto(AutonomousStateMachine):
         #     return
         # normalised = vector / np.linalg.norm(vector)
         # self.chassis.set_inputs(normalised[0]*2, normalised[1]*2, 0)
-        
+
         # # vx, vy = vector[0], vector[1]
         # # if changed_waypoint:
         # #     self.error_i = 0
         # #     self.last_error = 0
         # # vector = np.array((vx, vy))
 
-
-
-        
         # if self.pursuit.distance_along_path(self.chassis.position) >= 1:
         #     self.chassis.set_inputs(0, 0, 0)
         #     self.done()
