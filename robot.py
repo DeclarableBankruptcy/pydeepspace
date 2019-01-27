@@ -12,24 +12,26 @@ from utilities.navx import NavX
 from utilities.pure_pursuit import PurePursuit
 from networktables import NetworkTables
 
+# ctre.TalonSRX.Notifier = None
+
 
 class Robot(magicbot.MagicRobot):
     module_drive_free_speed: float = 84000.0  # encoder ticks / 100 ms
+    offset_rotation_rate = 100
     chassis: SwerveChassis
 
     def createObjects(self):
         """Create motors and stuff here."""
 
         # a + + b + - c - - d - +
-        x_dist = 0.25
-        y_dist = 0.25
+        x_dist = 0.2165
+        y_dist = 0.2625
         self.module_a = SwerveModule(  # top right module now back left
-            # "a", steer_talon=ctre.TalonSRX(48), drive_talon=ctre.TalonSRX(49),
             "a",
             steer_talon=ctre.TalonSRX(1),
             drive_talon=ctre.TalonSRX(2),
             x_pos=x_dist,
-            y_pos=y_dist,  # x = 0.33 y = 0.28
+            y_pos=y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
@@ -39,18 +41,17 @@ class Robot(magicbot.MagicRobot):
             steer_talon=ctre.TalonSRX(3),
             drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
-            y_pos=y_dist,  # x = 0.31, y = 0.28
+            y_pos=y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
-            # "a", steer_talon=ctre.TalonSRX(48), drive_talon=ctre.TalonSRX(49),
             "c",
             steer_talon=ctre.TalonSRX(5),
             drive_talon=ctre.TalonSRX(6),
             x_pos=-x_dist,
-            y_pos=-y_dist,  # x = 0.33 y = 0.28
+            y_pos=-y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
@@ -60,7 +61,7 @@ class Robot(magicbot.MagicRobot):
             steer_talon=ctre.TalonSRX(7),
             drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
-            y_pos=-y_dist,  # x = 0.31, y = 0.28
+            y_pos=-y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
@@ -74,8 +75,9 @@ class Robot(magicbot.MagicRobot):
         self.joystick = wpilib.Joystick(0)
 
         self.spin_rate = 1.5
-    
+
     def disabledPeriodic(self):
+        self.chassis.set_inputs(0, 0, 0)
         self.imu.resetHeading()
 
     def teleopInit(self):
@@ -141,21 +143,54 @@ class Robot(magicbot.MagicRobot):
         )
         self.sd.putNumber("joy_vx", joystick_vx)
 
-        # 7 8
-        # 9 10
-        if self.joystick.getRawButton(7):
+        if self.joystick.getRawButton(5):
             self.module_a.store_steer_offsets()
             self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-        if self.joystick.getRawButton(9):
+            if self.joystick.getTriggerPressed():
+                self.module_a.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_a.steer_motor.getSelectedSensorPosition(0) + self.offset_rotation_rate
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_a.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_a.steer_motor.getSelectedSensorPosition(0) - self.offset_rotation_rate
+                )
+
+        if self.joystick.getRawButton(3):
             self.module_b.store_steer_offsets()
             self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_b.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_b.steer_motor.getSelectedSensorPosition(0) + self.offset_rotation_rate
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_b.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_b.steer_motor.getSelectedSensorPosition(0) - self.offset_rotation_rate
+                )
 
-        if self.joystick.getRawButton(10):
+        if self.joystick.getRawButton(4):
             self.module_c.store_steer_offsets()
             self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-        if self.joystick.getRawButton(8):
+            if self.joystick.getTriggerPressed():
+                self.module_c.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_c.steer_motor.getSelectedSensorPosition(0) + self.offset_rotation_rate
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_c.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_c.steer_motor.getSelectedSensorPosition(0) - self.offset_rotation_rate
+                )
+
+        if self.joystick.getRawButton(6):
             self.module_d.store_steer_offsets()
             self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_d.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_d.steer_motor.getSelectedSensorPosition(0) + self.offset_rotation_rate
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_d.steer_motor.set(ctre.ControlMode.Position, 
+                    self.module_d.steer_motor.getSelectedSensorPosition(0) - self.offset_rotation_rate
+                )
+
 
     def robotPeriodic(self):
         # super().robotPeriodic()
@@ -169,6 +204,8 @@ class Robot(magicbot.MagicRobot):
             )
             self.sd.putNumber(module.name + "_pos_drive",
                 module.drive_motor.getSelectedSensorPosition(0))
+            self.sd.putNumber(module.name + "_drive_vel",
+                module.drive_motor.getSelectedSensorVelocity(0))
             try:
                 self.sd.putNumber(module.name + "_setpoint", module.setpoint)
             except:

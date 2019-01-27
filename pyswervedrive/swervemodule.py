@@ -1,5 +1,6 @@
 import math
 import ctre
+import hal
 from networktables import NetworkTables
 from utilities.functions import constrain_angle
 
@@ -9,7 +10,7 @@ class SwerveModule:
     # TODO: change back for real robot
     SRX_MAG_COUNTS_PER_REV: int = 4096
     WHEEL_DIAMETER: float = 0.0254 * 3
-    DRIVE_ENCODER_GEAR_REDUCTION: float = 100 / 12 * 46 / 26  # TODO check this value
+    DRIVE_ENCODER_GEAR_REDUCTION: float = 100 / 12 * 46 / 26
     STEER_COUNTS_PER_REV = 4096
     STEER_COUNTS_PER_RADIAN = STEER_COUNTS_PER_REV / math.tau
 
@@ -40,6 +41,10 @@ class SwerveModule:
         reverse_drive_direction: bool = False,
         reverse_drive_encoder: bool = False,
     ):
+        if hal.isSimulation():
+            # we aren't using the PID simulation here
+            steer_talon._use_notifier = False
+            drive_talon._use_notifier = False
 
         self.name = name
 
@@ -154,7 +159,6 @@ class SwerveModule:
         """
         steer_delta = constrain_angle(self.measured_azimuth - self.zero_azimuth)
         drive_delta = self.wheel_pos - self.zero_drive_pos
-        print(steer_delta, drive_delta)
         return steer_delta, drive_delta
 
     def get_cartesian_delta(self):

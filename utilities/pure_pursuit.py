@@ -75,22 +75,34 @@ class PurePursuit:
         else:
             print("No intersection found")
 
-    def build_path(self, waypoints: np.ndarray):
+    def build_path(self, waypoints):
         self.last_robot_x = waypoints[0][0]
         self.last_robot_y = waypoints[0][1]
         self.completed_path = False
-        self.waypoints = waypoints
+        self.distance_traveled = 0
+        self.waypoints = []
+        waypoint_distance = 0
+        previous_waypoint = waypoints[0]
+        for waypoint in waypoints:
+            x, y = waypoint
+            waypoint_distance += math.hypot(x - previous_waypoint[0], y - previous_waypoint[1])
+            previous_waypoint = waypoint
+            self.waypoints.append((x, y, waypoint_distance))
+            
+            
         self.current_waypoint_number = 0
         print(self.waypoints)
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
-        segment_start = self.waypoints[self.current_waypoint_number]
-        segment_end = self.waypoints[self.current_waypoint_number + 1]
         if self.current_waypoint_number >= len(self.waypoints) - 1:
             self.completed_path = True
             print("path completed")
             return None, None
+        segment_start = self.waypoints[self.current_waypoint_number]
+        segment_end = self.waypoints[self.current_waypoint_number + 1]
+        first_waypoint = self.waypoints[0]
+        last_waypoint = self.waypoints[-1]
         goal_point = self.find_intersections(
             segment_start,
             segment_end,
@@ -99,17 +111,14 @@ class PurePursuit:
         if goal_point is None:
             # if we cant find an intersection between the look_ahead and path
             # use the closest point on the segment as our goal
-            goal_point = self.find_closest_path_point(
-                segment_start,
-                segment_end,
-                robot_position,
-            )
+            goal_point = segment_end
         self.distance_along_path(robot_position)
         # print(goal_point)
         self.goal_point = goal_point
-        if self.distance_traveled >= math.hypot(segment_end[0] - segment_start[0], segment_end[1] - segment_start[1]):
+        if self.distance_traveled >= segment_end[2]:
             self.current_waypoint_number += 1
             changed_waypoint = True
+            print("changed segment")
         else:
             changed_waypoint = False
         # changed_waypoint = self.check_progress(

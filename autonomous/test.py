@@ -21,7 +21,7 @@ class TestPursuitAuto(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.points = np.array(((0.0, 0), (1, 0)))
+        self.points = [(0.0, 0), (0, 0)]
         # self.loops = 1
         # self.error_i = 0
         # self.last_error = 0
@@ -32,25 +32,39 @@ class TestPursuitAuto(AutonomousStateMachine):
         self.chassis.odometry_y = 0
 
     @state(first=True)
-    def move_forwards_and_back(self, initial_call):
+    def move_forwards(self, initial_call):
         if initial_call:
-            self.pursuit.build_path(self.points)
-            # self.loops = 1
-        heading = self.imu.getAngle()
-        x, y = self.chassis.position
-        position = np.array((x, y, heading))
-        changed_segment, vector = self.pursuit.compute_direction(position)
-        if self.pursuit.completed_path or changed_segment:
-            self.chassis.set_inputs(0, 0, 0, field_oriented=False)
+            self.chassis.set_inputs(1, 0, 0)
+            self.chassis.heading_hold_on()
+            self.chassis.set_heading_sp(0)
+        if self.chassis.odometry_x > 2:
+            self.chassis.set_inputs(0, 0, 0)
             self.done()
-            return
-        vx, vy = vector[0], vector[1]
-        # if changed_waypoint:
-        #     self.error_i = 0
-        #     self.last_error = 0
-        # vector = np.array((vx, vy))
-        normalised = vector / np.linalg.norm(vector)
-        self.chassis.set_inputs(normalised[0]*0.75, normalised[1]*0.75, 0)
+        # if initial_call:
+        #     self.pursuit.build_path(self.points)
+        #     self.chassis.heading_hold_on()
+        #     self.chassis.set_heading_sp(0)
+        #     # self.loops = 1
+        # heading = self.imu.getAngle()
+        # x, y = self.chassis.position
+        # position = np.array((x, y, heading))
+        # changed_segment, vector = self.pursuit.compute_direction(position)
+        # if self.pursuit.completed_path or changed_segment:
+        #     self.chassis.set_inputs(0, 0, 0, field_oriented=False)
+        #     self.done()
+        #     return
+        # normalised = vector / np.linalg.norm(vector)
+        # self.chassis.set_inputs(normalised[0]*2, normalised[1]*2, 0)
+        
+        # # vx, vy = vector[0], vector[1]
+        # # if changed_waypoint:
+        # #     self.error_i = 0
+        # #     self.last_error = 0
+        # # vector = np.array((vx, vy))
+
+
+
+        
         # if self.pursuit.distance_along_path(self.chassis.position) >= 1:
         #     self.chassis.set_inputs(0, 0, 0)
         #     self.done()

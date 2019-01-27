@@ -8,8 +8,8 @@ from pyswervedrive.swervemodule import SwerveModule
 
 
 class SwerveChassis:
-    WIDTH = 1
-    LENGTH = 0.88
+    WIDTH = 0.75
+    LENGTH = 0.75
 
     imu: NavX
     module_a: SwerveModule
@@ -40,7 +40,7 @@ class SwerveChassis:
         self.heading_pid = PIDController(
             Kp=3.0,
             Ki=0.0,
-            Kd=5.0,
+            Kd=0.0,
             source=self.imu.getAngle,
             output=self.heading_pid_out,
             period=1 / 50,
@@ -173,8 +173,6 @@ class SwerveChassis:
             module.update_odometry()
             odometry_x, odometry_y = module.get_cartesian_delta()
             velocity_x, velocity_y = module.get_cartesian_vel()
-            # print(module.get_cartesian_vel())
-            # print(module.get_cartesian_delta())
             odometry_outputs[i * 2, 0] = odometry_x
             odometry_outputs[i * 2 + 1, 0] = odometry_y
             velocity_outputs[i * 2, 0] = velocity_x
