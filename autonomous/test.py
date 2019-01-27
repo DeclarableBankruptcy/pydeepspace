@@ -35,8 +35,8 @@ class TestPursuitAuto(AutonomousStateMachine):
     def move_forwards(self, initial_call):
         if initial_call:
             self.chassis.set_inputs(1, 0, 0)
-            self.chassis.heading_hold_on()
-            self.chassis.set_heading_sp(0)
+            # self.chassis.heading_hold_on()
+            # self.chassis.set_heading_sp(0)
         if self.chassis.odometry_x > 2:
             self.chassis.set_inputs(0, 0, 0)
             self.done()

@@ -16,8 +16,9 @@ from networktables import NetworkTables
 
 
 class Robot(magicbot.MagicRobot):
-    module_drive_free_speed: float = 84000.0  # encoder ticks / 100 ms
-    offset_rotation_rate = 100
+    module_drive_free_speed: float = 94000.0  # encoder ticks / 100 ms
+    #  TODO do the maths to verify that this is correct
+    offset_rotation_rate = 40
     chassis: SwerveChassis
 
     def createObjects(self):
@@ -43,8 +44,8 @@ class Robot(magicbot.MagicRobot):
             x_pos=-x_dist,
             y_pos=y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
+            reverse_drive_encoder=True,
             reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
             "c",
@@ -89,12 +90,13 @@ class Robot(magicbot.MagicRobot):
         Process inputs from the driver station here.
         This is run each iteration of the control loop before magicbot components are executed.
         """
+        self.chassis.heading_hold_off()
         if self.joystick.getRawButtonPressed(7):
             pass
 
-        if self.joystick.getRawButtonPressed(10):
-            self.imu.resetHeading()
-            self.chassis.set_heading_sp(0)
+        # if self.joystick.getRawButtonPressed(10):
+        #     self.imu.resetHeading()
+        #     self.chassis.set_heading_sp(0)
 
         throttle = (1 - self.joystick.getThrottle()) / 2
         self.sd.putNumber("joy_throttle", throttle)
@@ -127,6 +129,7 @@ class Robot(magicbot.MagicRobot):
                 field_oriented=not self.joystick.getRawButton(6),
             )
         else:
+            # pass
             self.chassis.set_inputs(0, 0, 0)
             # self.module_a.steer_motor.stop()
             # self.module_b.steer_motor.stop()
@@ -136,6 +139,11 @@ class Robot(magicbot.MagicRobot):
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(constrained_angle)
+        
+        if self.joystick.getRawButtonPressed(8):
+            self.chassis.set_inputs(0.75, 0, 0)
+
+
 
     def testPeriodic(self):
         joystick_vx = -rescale_js(
@@ -206,6 +214,16 @@ class Robot(magicbot.MagicRobot):
                     self.module_d.steer_motor.getSelectedSensorPosition(0)
                     - self.offset_rotation_rate,
                 )
+        
+        if self.joystick.getRawButtonPressed(8): 
+            for module in self.chassis.modules:
+                module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
+        
+        if self.joystick.getRawButtonPressed(12):
+            for module in self.chassis.modules:
+                module.steer_motor.set(ctre.ControlMode.Position, module.steer_enc_offset)
+
+
 
     def robotPeriodic(self):
         # super().robotPeriodic()
@@ -225,6 +243,11 @@ class Robot(magicbot.MagicRobot):
                 module.name + "_drive_vel",
                 module.drive_motor.getSelectedSensorVelocity(0),
             )
+            self.sd.putNumber(
+                module.name + "_drive_motor_output",
+                module.drive_motor.getMotorOutputPercent(),
+            )
+            # /module.drive_velocity_to_native_units
             try:
                 self.sd.putNumber(module.name + "_setpoint", module.setpoint)
             except:
