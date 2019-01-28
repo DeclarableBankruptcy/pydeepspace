@@ -14,17 +14,24 @@ from networktables import NetworkTables
 
 # ctre.TalonSRX.Notifier = None
 
+from automations.alignment import Aligner
+from automations.hatch import HatchController
+from components.hatch import Hatch
+from utilities.functions import constrain_angle, rescale_js
+
 
 class Robot(magicbot.MagicRobot):
-    module_drive_free_speed: float = 94000.0  # encoder ticks / 100 ms
-    #  TODO do the maths to verify that this is correct
-    offset_rotation_rate = 40
+
     chassis: SwerveChassis
+    align: Aligner
+    hatch: Hatch
+    hatchman: HatchController
+
+    module_drive_free_speed: float = 94000.0
+
 
     def createObjects(self):
         """Create motors and stuff here."""
-
-        # a + + b + - c - - d - +
         x_dist = 0.2165
         y_dist = 0.2625
         self.module_a = SwerveModule(  # top right module now back left
@@ -68,44 +75,54 @@ class Robot(magicbot.MagicRobot):
             reverse_drive_direction=True,
         )
         self.imu = NavX()
-        self.pursuit = PurePursuit(look_ahead=0.2)
 
-        self.sd = NetworkTables.getTable("SmartDashboard")
+        # Controlers
+        self.joystick = wpilib.Joystick(1)
+        self.gamepad = wpilib.XboxController(0)
 
-        # boilerplate setup for the joystick
-        self.joystick = wpilib.Joystick(0)
-
+        # Controller related variables
         self.spin_rate = 1.5
-
-    def disabledPeriodic(self):
-        self.chassis.set_inputs(0, 0, 0)
-        self.imu.resetHeading()
+        self.snaps = [math.radians(a * 45) for a in range(-3, 5)]
 
     def teleopInit(self):
         """Called when teleop starts; optional"""
         self.chassis.set_inputs(0, 0, 0)
 
     def teleopPeriodic(self):
-        """
-        Process inputs from the driver station here.
-        This is run each iteration of the control loop before magicbot components are executed.
-        """
-        self.chassis.heading_hold_off()
-        if self.joystick.getRawButtonPressed(7):
-            pass
+        """Allow the drivers to control the robot."""
+        # Handle co-driver input
+        # Intaking
+        if self.gamepad.getAButtonPressed():
+            self.hatchman.start_punch(force=True)
 
-        # if self.joystick.getRawButtonPressed(10):
-        #     self.imu.resetHeading()
-        #     self.chassis.set_heading_sp(0)
+        # Outaking
+        if (
+            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0
+        ):
+            if not self.hatch.is_executing:
+                self.hatch.override = self.gamepad.getBumper(
+                    self.gamepad.Hand.kLeft
+                )
+                self.hatch.outtake(force=True)
 
-        throttle = (1 - self.joystick.getThrottle()) / 2
-        self.sd.putNumber("joy_throttle", throttle)
 
-        # this is where the joystick inputs get converted to numbers that are sent
-        # to the chassis component. we rescale them using the rescale_js function,
-        # in order to make their response exponential, and to set a dead zone -
-        # which just means if it is under a certain value a 0 will be sent
-        # TODO: Tune these constants for whatever robot they are on
+        # Snap to angle
+        # x is set to -y and y is set x to rotate the coordinate system counter
+        # clockwise to follow our system for giving directions
+        x = -rescale_js(self.gamepad.getY(self.gamepad.Hand.kLeft), deadzone=0.5)
+        y = rescale_js(self.gamepad.getX(self.gamepad.Hand.kLeft), deadzone=0.5)
+
+        if x != 0.0 or y != 0.0:
+            direction = math.atan2(y, x)
+            snapped_angle = min(self.snaps, key=lambda x: abs(x - direction))
+            self.chassis.set_heading_sp(snapped_angle)
+
+        # Handle driver input
+        # Driving
+        throttle = (
+            1 - self.joystick.getThrottle()
+        ) / 2  # TODO: don't set to 0 when not turned on
         joystick_vx = -rescale_js(
             self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=4 * throttle
         )
@@ -115,11 +132,6 @@ class Robot(magicbot.MagicRobot):
         joystick_vz = -rescale_js(
             self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate
         )
-        joystick_hat = self.joystick.getPOV()
-
-        self.sd.putNumber("joy_vx", joystick_vx)
-        self.sd.putNumber("joy_vy", joystick_vy)
-        self.sd.putNumber("joy_vz", joystick_vz)
 
         if joystick_vx or joystick_vy or joystick_vz:
             self.chassis.set_inputs(
@@ -129,129 +141,14 @@ class Robot(magicbot.MagicRobot):
                 field_oriented=not self.joystick.getRawButton(6),
             )
         else:
-            # pass
             self.chassis.set_inputs(0, 0, 0)
-            # self.module_a.steer_motor.stop()
-            # self.module_b.steer_motor.stop()
-            # self.module_a.drive_motor.stop()
-            # self.module_b.drive_motor.stop()
+
+        # Snap to angle
+        joystick_hat = self.joystick.getPOV()
 
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
-            self.chassis.set_heading_sp(constrained_angle)
-        
-        if self.joystick.getRawButtonPressed(8):
-            self.chassis.set_inputs(0.75, 0, 0)
-
-
-
-    def testPeriodic(self):
-        joystick_vx = -rescale_js(
-            self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
-        )
-        self.sd.putNumber("joy_vx", joystick_vx)
-
-        if self.joystick.getRawButton(5):
-            self.module_a.store_steer_offsets()
-            self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-            if self.joystick.getTriggerPressed():
-                self.module_a.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_a.steer_motor.getSelectedSensorPosition(0)
-                    + self.offset_rotation_rate,
-                )
-            if self.joystick.getRawButtonPressed(2):
-                self.module_a.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_a.steer_motor.getSelectedSensorPosition(0)
-                    - self.offset_rotation_rate,
-                )
-
-        if self.joystick.getRawButton(3):
-            self.module_b.store_steer_offsets()
-            self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-            if self.joystick.getTriggerPressed():
-                self.module_b.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_b.steer_motor.getSelectedSensorPosition(0)
-                    + self.offset_rotation_rate,
-                )
-            if self.joystick.getRawButtonPressed(2):
-                self.module_b.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_b.steer_motor.getSelectedSensorPosition(0)
-                    - self.offset_rotation_rate,
-                )
-
-        if self.joystick.getRawButton(4):
-            self.module_c.store_steer_offsets()
-            self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-            if self.joystick.getTriggerPressed():
-                self.module_c.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_c.steer_motor.getSelectedSensorPosition(0)
-                    + self.offset_rotation_rate,
-                )
-            if self.joystick.getRawButtonPressed(2):
-                self.module_c.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_c.steer_motor.getSelectedSensorPosition(0)
-                    - self.offset_rotation_rate,
-                )
-
-        if self.joystick.getRawButton(6):
-            self.module_d.store_steer_offsets()
-            self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
-            if self.joystick.getTriggerPressed():
-                self.module_d.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_d.steer_motor.getSelectedSensorPosition(0)
-                    + self.offset_rotation_rate,
-                )
-            if self.joystick.getRawButtonPressed(2):
-                self.module_d.steer_motor.set(
-                    ctre.ControlMode.Position,
-                    self.module_d.steer_motor.getSelectedSensorPosition(0)
-                    - self.offset_rotation_rate,
-                )
-        
-        if self.joystick.getRawButtonPressed(8): 
-            for module in self.chassis.modules:
-                module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
-        
-        if self.joystick.getRawButtonPressed(12):
-            for module in self.chassis.modules:
-                module.steer_motor.set(ctre.ControlMode.Position, module.steer_enc_offset)
-
-
-
-    def robotPeriodic(self):
-        # super().robotPeriodic()
-        self.sd.putNumber("imu_heading", self.imu.getAngle())
-        self.sd.putNumber("odometry_x", self.chassis.position[0])
-        self.sd.putNumber("odometry_y", self.chassis.position[1])
-        for module in self.chassis.modules:
-            self.sd.putNumber(
-                module.name + "_pos_steer",
-                module.steer_motor.getSelectedSensorPosition(0),
-            )
-            self.sd.putNumber(
-                module.name + "_pos_drive",
-                module.drive_motor.getSelectedSensorPosition(0),
-            )
-            self.sd.putNumber(
-                module.name + "_drive_vel",
-                module.drive_motor.getSelectedSensorVelocity(0),
-            )
-            self.sd.putNumber(
-                module.name + "_drive_motor_output",
-                module.drive_motor.getMotorOutputPercent(),
-            )
-            # /module.drive_velocity_to_native_units
-            try:
-                self.sd.putNumber(module.name + "_setpoint", module.setpoint)
-            except:
-                pass
+            self.chassis.set_heading_sp(math.radians(constrained_angle))
 
 
 if __name__ == "__main__":
