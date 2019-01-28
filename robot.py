@@ -99,6 +99,11 @@ class Robot(magicbot.MagicRobot):
         self.snaps = [math.radians(a * 45) for a in range(-3, 5)]
 
         self.sd = NetworkTables.getTable("SmartDashboard")
+        wpilib.SmartDashboard.putData("gyro", self.imu.ahrs)
+
+    def disabledPeriodic(self):
+        self.chassis.set_inputs(0, 0, 0)
+        self.imu.resetHeading()
 
     def teleopInit(self):
         """Called when teleop starts; optional"""
@@ -165,12 +170,121 @@ class Robot(magicbot.MagicRobot):
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(math.radians(constrained_angle))
+            self.chassis.set_heading_sp(constrained_angle)
+
+        if self.joystick.getRawButtonPressed(8):
+            self.chassis.set_inputs(0.75, 0, 0)
+
+    def testPeriodic(self):
+        joystick_vx = -rescale_js(
+            self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
+        )
+        self.sd.putNumber("joy_vx", joystick_vx)
+
+        if self.joystick.getRawButton(5):
+            self.module_a.store_steer_offsets()
+            self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_a.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_a.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_a.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_a.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(3):
+            self.module_b.store_steer_offsets()
+            self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_b.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_b.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_b.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_b.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(4):
+            self.module_c.store_steer_offsets()
+            self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_c.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_c.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_c.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_c.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(6):
+            self.module_d.store_steer_offsets()
+            self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_d.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_d.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_d.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_d.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButtonPressed(8):
+            for module in self.chassis.modules:
+                module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
+
+        if self.joystick.getRawButtonPressed(12):
+            for module in self.chassis.modules:
+                module.steer_motor.set(
+                    ctre.ControlMode.Position, module.steer_enc_offset
+                )
 
     def robotPeriodic(self):
-        # super().robotPeriodic()
-        self.sd.putNumber("Top_limit_switch", self.top_limit_switch.get())
-        self.sd.putNumber("Left_limit_switch", self.left_limit_switch.get())
-        self.sd.putNumber("Right_limit_switch", self.right_limit_switch.get())
+        super().robotPeriodic()
+
+        self.sd.putNumber("odometry_x", self.chassis.position[0])
+        self.sd.putNumber("odometry_y", self.chassis.position[1])
+        for module in self.chassis.modules:
+            self.sd.putNumber(
+                module.name + "_pos_steer",
+                module.steer_motor.getSelectedSensorPosition(0),
+            )
+            self.sd.putNumber(
+                module.name + "_pos_drive",
+                module.drive_motor.getSelectedSensorPosition(0),
+            )
+            self.sd.putNumber(
+                module.name + "_drive_vel",
+                module.drive_motor.getSelectedSensorVelocity(0),
+            )
+            self.sd.putNumber(
+                module.name + "_drive_motor_output",
+                module.drive_motor.getMotorOutputPercent(),
+            )
+            self.sd.putNumber("Top_limit_switch", self.top_limit_switch.get())
+            self.sd.putNumber("Left_limit_switch", self.left_limit_switch.get())
+            self.sd.putNumber("Right_limit_switch", self.right_limit_switch.get())
+            # /module.drive_velocity_to_native_units
+            try:
+                self.sd.putNumber(module.name + "_setpoint", module.setpoint)
+            except:
+                pass
 
 
 if __name__ == "__main__":
