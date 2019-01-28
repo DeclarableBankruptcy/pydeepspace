@@ -19,9 +19,6 @@ class SwerveModule:
     # odometry is consistently slightly off, need a fudge factor to compensate
     # TODO: Tune the fudge factor
     drive_odometry_fudge_factor = 1 / 1
-    drive_counts_per_metre = (
-        drive_counts_per_rev / (math.pi * WHEEL_DIAMETER) * drive_odometry_fudge_factor
-    )
 
     # factor by which to scale velocities in m/s to give to our drive talon.
     # 0.1 is because SRX velocities are measured in ticks/100ms
@@ -102,10 +99,8 @@ class SwerveModule:
         self.drive_motor.setInverted(self.reverse_drive_direction)
         # TODO: change back to original constants once we get on to real robot
         self.drive_motor.config_kP(0, 0.1, 10)  # 0.5, 0.002, 0,
+        self.drive_motor.config_kP(0, 0.005, 10)  # 0.5, 0.002, 0,
         self.drive_motor.config_kI(0, 0, 10)
-        self.drive_motor.config_kD(0, 0, 10)
-        self.drive_motor.config_kF(0, 1024.0 / self.drive_free_speed, 10)
-        self.drive_motor.configClosedLoopRamp(0.3, 10)
         self.drive_motor.selectProfileSlot(0, 0)
 
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)

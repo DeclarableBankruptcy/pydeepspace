@@ -1,4 +1,7 @@
 pyfrc ~= 2019.0
+robotpy-ctre ~= 2019.0
+robotpy-navx ~= 2019.0
+numpy ~= 1.14
 
 coverage
 pyflakes
