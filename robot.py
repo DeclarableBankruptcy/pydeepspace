@@ -5,6 +5,8 @@ import numpy as np
 import ctre
 import magicbot
 import wpilib
+from wpilib.shuffleboard import Shuffleboard
+
 from pyswervedrive.swervechassis import SwerveChassis
 from pyswervedrive.swervemodule import SwerveModule
 from utilities.functions import rescale_js, constrain_angle
@@ -17,6 +19,7 @@ from networktables import NetworkTables
 from automations.alignment import Aligner
 from automations.hatch import HatchController
 from components.hatch import Hatch
+from components.vision import Vision
 from utilities.functions import constrain_angle, rescale_js
 
 
@@ -75,14 +78,27 @@ class Robot(magicbot.MagicRobot):
             reverse_drive_direction=True,
         )
         self.imu = NavX()
+        self.vision = Vision()
+        self.pursuit = PurePursuit(look_ahead=0.2)
 
         # Controlers
-        self.joystick = wpilib.Joystick(1)
-        self.gamepad = wpilib.XboxController(0)
+        self.joystick = wpilib.Joystick(0)
+        self.gamepad = wpilib.XboxController(1)
+
+        self.top_puncher = wpilib.Solenoid(0)
+        self.left_puncher = wpilib.Solenoid(2)
+        self.right_puncher = wpilib.Solenoid(3)
+
+        self.top_limit_switch = wpilib.DigitalInput(0)
+        self.left_limit_switch = wpilib.DigitalInput(1)
+        self.right_limit_switch = wpilib.DigitalInput(2)
+
 
         # Controller related variables
         self.spin_rate = 1.5
         self.snaps = [math.radians(a * 45) for a in range(-3, 5)]
+
+        self.sd = NetworkTables.getTable("SmartDashboard")
 
     def teleopInit(self):
         """Called when teleop starts; optional"""
@@ -93,18 +109,18 @@ class Robot(magicbot.MagicRobot):
         # Handle co-driver input
         # Intaking
         if self.gamepad.getAButtonPressed():
-            self.hatchman.start_punch(force=True)
+            self.hatchman.punch(force=True)
 
         # Outaking
         if (
             self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0
             or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0
         ):
-            if not self.hatch.is_executing:
+            if not self.hatchman.is_executing:
                 self.hatch.override = self.gamepad.getBumper(
                     self.gamepad.Hand.kLeft
                 )
-                self.hatch.outtake(force=True)
+                self.hatchman.engage()
 
 
         # Snap to angle
@@ -149,6 +165,12 @@ class Robot(magicbot.MagicRobot):
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(math.radians(constrained_angle))
+
+    def robotPeriodic(self):
+        # super().robotPeriodic()
+        self.sd.putNumber("Top_limit_switch", self.top_limit_switch.get())
+        self.sd.putNumber("Left_limit_switch", self.left_limit_switch.get())
+        self.sd.putNumber("Right_limit_switch", self.right_limit_switch.get())
 
 
 if __name__ == "__main__":

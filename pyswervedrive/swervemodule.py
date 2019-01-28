@@ -19,6 +19,9 @@ class SwerveModule:
     # odometry is consistently slightly off, need a fudge factor to compensate
     # TODO: Tune the fudge factor
     drive_odometry_fudge_factor = 1 / 1
+    drive_counts_per_metre = (
+        drive_counts_per_rev / (math.pi * WHEEL_DIAMETER) * drive_odometry_fudge_factor
+    )
 
     # factor by which to scale velocities in m/s to give to our drive talon.
     # 0.1 is because SRX velocities are measured in ticks/100ms
