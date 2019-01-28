@@ -25,11 +25,11 @@ class Hatch:
     def retract(self):
         self.punch_on = False
 
-    def hatch_in(self):
-        return not any(
+    def contained(self):
+        return any(
             [
-                self.top_limit_switch.get(),
-                self.left_limit_switch.get(),
-                self.right_limit_switch.get(),
+                not self.top_limit_switch.get(),
+                not self.left_limit_switch.get(),
+                not self.right_limit_switch.get(),
             ]
         )
