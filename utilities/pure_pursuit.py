@@ -20,6 +20,7 @@ class PurePursuit:
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
         self.ending_tolerance = ending_tolerance
+        self.trapezoid = True
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
         """
@@ -143,18 +144,21 @@ class PurePursuit:
         oriented_y = -x * math.sin(heading) + y * math.cos(heading)
         return oriented_x, oriented_y
 
-    def generate_trapezoidal_function(v, u, a, d):
-        '''
+    def generate_trapezoidal_function(self, v, u, a, d):
+        """Generate a trapezoidal function for acceleration.
+        
         Args:
             v = final speed
             u = initial speed
             a = acceleration
             d = deceleration
-        '''
+        """
         d = abs(d)
         v_accel = (v ** 2 - u ** 2) / (2 * a)
         v_decel = (0.2 ** 2 - v ** 2) / (2 * d)
         if (v_decel < v_accel):
+            self.trapezoid = False
             return (v_accel + v_decel) / 2
         else:
+            self.trapezoid = True
             return v_accel, v_decel
