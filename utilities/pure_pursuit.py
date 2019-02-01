@@ -142,3 +142,19 @@ class PurePursuit:
         oriented_x = x * math.cos(heading) + y * math.sin(heading)
         oriented_y = -x * math.sin(heading) + y * math.cos(heading)
         return oriented_x, oriented_y
+
+    def generate_trapezoidal_function(v, u, a, d):
+        '''
+        Args:
+            v = final speed
+            u = initial speed
+            a = acceleration
+            d = deceleration
+        '''
+        d = abs(d)
+        v_accel = (v ** 2 - u ** 2) / (2 * a)
+        v_decel = (0.2 ** 2 - v ** 2) / (2 * d)
+        if (v_decel < v_accel):
+            return (v_accel + v_decel) / 2
+        else:
+            return v_accel, v_decel
